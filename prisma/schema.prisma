@@ -1,0 +1,166 @@
+// Prisma schema for FATAMI DESIGNS
+// Note: sandbox uses SQLite locally. For production (Vercel + PostgreSQL),
+// change `provider = "sqlite"` to `provider = "postgresql"` and use a
+// `postgresql://` connection string in DATABASE_URL. All field types below
+// are PostgreSQL-compatible (String/Int/Boolean/DateTime/Json).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         String   @default("ADMIN") // ADMIN | EDITOR
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  nameAr      String
+  slug        String    @unique
+  image       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[]
+}
+
+model Product {
+  id             String        @id @default(cuid())
+  slug           String        @unique
+  name           String
+  nameAr         String
+  description    String
+  price          Float
+  compareAtPrice Float?
+  categoryId     String
+  category       Category      @relation(fields: [categoryId], references: [id])
+  images         ProductImage[]
+  sizes          ProductSize[]
+  featured       Boolean       @default(false)
+  newArrival     Boolean       @default(false)
+  bestSeller     Boolean       @default(false)
+  active         Boolean       @default(true)
+  fabric         String?
+  care           String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  orderItems     OrderItem[]
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  alt       String
+  position  Int     @default(0)
+}
+
+model ProductSize {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  size      String  // XS | S | M | L | XL | XXL
+  stock     Int     @default(0)
+}
+
+model Customer {
+  id          String      @id @default(cuid())
+  email       String?
+  phone       String
+  firstName   String
+  lastName    String
+  address     String
+  apartment   String?
+  block       String?
+  postalCode  String?
+  city        String
+  governorate String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  orders      Order[]
+}
+
+model Order {
+  id                    String        @id @default(cuid())
+  orderNumber           String        @unique
+  customerId            String
+  customer              Customer      @relation(fields: [customerId], references: [id])
+  items                 OrderItem[]
+  subtotal              Float
+  shippingCost          Float
+  discount              Float         @default(0)
+  total                 Float
+  status                String        @default("PENDING")
+  paymentStatus         String        @default("UNPAID")
+  paymentMethod         String        @default("UPAYMENTS")
+  governorate           String
+  city                  String
+  trackingNumber        String?
+  upaymentsTransactionId String?
+  upaymentsReference    String?
+  notes                 String?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+}
+
+model OrderItem {
+  id              String   @id @default(cuid())
+  orderId         String
+  order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId       String
+  product         Product  @relation(fields: [productId], references: [id])
+  productName     String
+  productImage    String?
+  size            String
+  quantity        Int
+  price           Float
+  measurementsJson String?
+}
+
+model GovernorateRate {
+  id           String   @id @default(cuid())
+  name         String
+  nameAr       String   @unique
+  shippingCost Float
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model DiscountCode {
+  id         String    @id @default(cuid())
+  code       String    @unique
+  type       String    // PERCENTAGE | FIXED
+  value      Float
+  active     Boolean   @default(true)
+  usageLimit Int?
+  usedCount  Int       @default(0)
+  expiresAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+model StoreSettings {
+  id                    String   @id @default(cuid())
+  brandName             String   @default("FATAMI DESIGNS")
+  brandTagline          String   @default("أناقة بلا حدود")
+  currency              String   @default("KWD")
+  whatsapp              String?
+  instagram             String?
+  tiktok                String?
+  email                 String?
+  phone                 String?
+  freeShippingThreshold Float?
+  updatedAt             DateTime @updatedAt
+}
