@@ -99,7 +99,7 @@ export function CheckoutView() {
     const fd = new FormData();
     fd.append("file", file);
     try {
-      const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
       const json = await res.json();
       if (json.success) {
         setScreenshotUrl(json.data.url);

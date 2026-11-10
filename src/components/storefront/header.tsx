@@ -64,7 +64,7 @@ export function StorefrontHeader() {
                       التشكيلات
                     </p>
                   </div>
-                  {categories.filter((c) => c.slug !== "bottoms").map((c) => (
+                  {categories.filter((c) => c.slug !== "bottoms" && c.slug !== "tops").map((c) => (
                     <MenuLink
                       key={c.id}
                       onClick={() => {
@@ -89,9 +89,7 @@ export function StorefrontHeader() {
                   <MenuLink onClick={() => { setView("returns"); setMenuOpen(false); }}>
                     الإرجاع والاستبدال
                   </MenuLink>
-                  <MenuLink onClick={() => { setView("order-tracking"); setMenuOpen(false); }}>
-                    تتبع الطلب
-                  </MenuLink>
+
                 </nav>
                 <div className="px-6 py-5 border-t border-hairline mt-2">
                   <p className="text-[10px] text-muted-brand mb-2.5 tracking-luxe uppercase">

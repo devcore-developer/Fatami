@@ -114,9 +114,9 @@ export function HomePage() {
               type="email"
               required
               placeholder="أدخلي بريدك الإلكتروني"
-              className="flex-1 h-14 sm:h-12 px-6 sm:px-5 bg-surface border border-hairline rounded-full sm:rounded-l-full sm:rounded-r-none text-base sm:text-sm text-charcoal placeholder:text-muted-brand placeholder:text-base outline-none focus:ring-1 focus:ring-brown"
+              className="flex-1 h-16 sm:h-12 px-6 sm:px-5 bg-surface border border-hairline rounded-full sm:rounded-l-full sm:rounded-r-none text-base sm:text-sm text-charcoal placeholder:text-muted-brand placeholder:text-base outline-none focus:ring-1 focus:ring-brown"
             />
-            <button className="h-14 sm:h-12 px-8 bg-charcoal text-cream text-sm font-medium hover:bg-dark-brown transition-colors whitespace-nowrap rounded-full sm:rounded-r-full sm:rounded-l-none">
+            <button className="h-16 sm:h-12 px-8 bg-charcoal text-cream text-sm font-medium hover:bg-dark-brown transition-colors whitespace-nowrap rounded-full sm:rounded-r-full sm:rounded-l-none">
               اشتركي الآن
             </button>
           </form>
