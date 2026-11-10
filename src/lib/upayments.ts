@@ -129,8 +129,6 @@ export async function createPaymentRequest(orderId: string): Promise<{
       where: { id: orderId },
       data: {
         paymentStatus: "PENDING",
-        upaymentsReference: json.data.reference ?? null,
-        upaymentsTransactionId: json.data.transactionID ?? null,
       },
     });
     return {
@@ -209,15 +207,13 @@ export async function processPaymentResult(
 
   const verification = await verifyPayment(transactionId, orderNumber);
   if (!verification.success) {
-    await updateOrderPayment(orderId, "PENDING", transactionId);
+    await updateOrderPayment(orderId, "PENDING");
     return { ok: false, status: "VERIFICATION_PENDING" };
   }
 
   await updateOrderPayment(
     orderId,
     verification.status === "PAID" ? "PAID" : verification.status === "UNKNOWN" ? "PENDING" : verification.status,
-    transactionId,
-    order.trackingNumber ?? undefined
   );
 
   return { ok: true, status: verification.status };

@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
   // Verify transaction with UPayments server-side.
   const result = await processPaymentResult(
     order.id,
-    transactionId ?? order.upaymentsTransactionId ?? "",
+    transactionId ?? "",
     orderNumber
   );
 

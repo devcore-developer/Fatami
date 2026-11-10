@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { formatPrice } from "@/lib/format";
-import { Package, ShoppingCart, Users, DollarSign, TrendingUp, AlertTriangle } from "lucide-react";
+import { Package, ShoppingCart, Users, DollarSign, TrendingUp } from "lucide-react";
 
 export function DashboardHome() {
   const [stats, setStats] = useState<any>(null);
@@ -107,29 +107,6 @@ export function DashboardHome() {
           )}
         </div>
       </div>
-
-      {/* Low stock alert */}
-      {stats.lowStock.length > 0 && (
-        <div className="border border-border bg-background p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <AlertTriangle className="h-4 w-4 text-foreground" />
-            <h2 className="text-sm font-medium tracking-luxe uppercase">مخزون منخفض</h2>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {stats.lowStock.map((s: any, i: number) => (
-              <div key={i} className="flex items-center justify-between border border-border p-3">
-                <div>
-                  <p className="text-xs font-medium line-clamp-1">{s.product}</p>
-                  <p className="text-[10px] text-muted-foreground">مقاس {s.size}</p>
-                </div>
-                <span className={`text-sm font-bold ${s.stock === 0 ? "text-destructive" : "text-foreground"}`}>
-                  {s.stock}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

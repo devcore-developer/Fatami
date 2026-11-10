@@ -90,16 +90,14 @@ export function StorefrontFooter() {
           </div>
         </div>
 
-        {/* Payment methods + copyright — NO admin link */}
+        {/* Payment method + copyright */}
         <div className="mt-12 pt-6 border-t border-cream/10 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-cream/40 text-center sm:text-right font-light">
             © {year} FATAMI DESIGNS — جميع الحقوق محفوظة
           </p>
           <div className="flex items-center gap-2.5 text-xs text-cream/40">
-            <span className="hidden sm:inline">طرق الدفع</span>
-            <PaymentBadge label="UPayments" />
-            <PaymentBadge label="VISA" />
-            <PaymentBadge label="Mastercard" />
+            <span className="hidden sm:inline">طريقة الدفع</span>
+            <PaymentBadge label="تحويل بنكي" />
           </div>
         </div>
       </div>

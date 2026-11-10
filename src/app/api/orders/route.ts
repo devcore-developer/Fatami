@@ -36,7 +36,8 @@ export async function POST(req: NextRequest) {
         governorate: c.governorate,
       },
       items: body.items,
-      paymentMethod: body.paymentMethod ?? "UPAYMENTS",
+      paymentMethod: body.paymentMethod ?? "BANK_TRANSFER",
+      transferScreenshot: body.transferScreenshot,
       notes: body.notes,
     };
 
@@ -53,6 +54,7 @@ export async function POST(req: NextRequest) {
         trackingNumber: order.trackingNumber,
         paymentStatus: order.paymentStatus,
         paymentMethod: order.paymentMethod,
+        transferScreenshot: order.transferScreenshot,
       },
     });
   } catch (e: any) {

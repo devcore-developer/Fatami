@@ -147,7 +147,7 @@ export interface Order {
   governorate: string;
   city: string;
   trackingNumber?: string;
-  upaymentsTransactionId?: string;
+  transferScreenshot?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -173,6 +173,10 @@ export interface StoreSettings {
   email?: string;
   phone?: string;
   freeShippingThreshold?: number;
+  bankName?: string;
+  bankAccount?: string;
+  accountName?: string;
+  iban?: string;
 }
 
 export type StoreView =

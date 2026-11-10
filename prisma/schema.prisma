@@ -104,12 +104,11 @@ model Order {
   total                 Float
   status                String        @default("PENDING")
   paymentStatus         String        @default("UNPAID")
-  paymentMethod         String        @default("UPAYMENTS")
+  paymentMethod         String        @default("BANK_TRANSFER")
   governorate           String
   city                  String
   trackingNumber        String?
-  upaymentsTransactionId String?
-  upaymentsReference    String?
+  transferScreenshot    String?
   notes                 String?
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt
@@ -163,6 +162,10 @@ model StoreSettings {
   email                 String?
   phone                 String?
   freeShippingThreshold Float?
+  bankName              String?
+  bankAccount           String?
+  accountName           String?
+  iban                  String?
   updatedAt             DateTime @updatedAt
 }
 

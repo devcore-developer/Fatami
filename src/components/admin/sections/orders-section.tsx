@@ -199,10 +199,23 @@ export function OrdersSection() {
               <Section title="حالة الطلب">
                 <Row label="الحالة" value={STATUS_LABELS[selected.status]} />
                 <Row label="الدفع" value={PAYMENT_LABELS[selected.paymentStatus]} />
-                <Row label="طريقة الدفع" value={selected.paymentMethod === "UPAYMENTS" ? "UPayments" : "الدفع عند الاستلام"} />
+                <Row label="طريقة الدفع" value="تحويل بنكي" />
                 {selected.trackingNumber && <Row label="رقم الشحن" value={selected.trackingNumber} ltr />}
-                {selected.upaymentsTransactionId && <Row label="معاملة UPayments" value={selected.upaymentsTransactionId} ltr />}
               </Section>
+
+              {/* Transfer screenshot */}
+              {selected.transferScreenshot && (
+                <Section title="إيصال التحويل">
+                  <a href={selected.transferScreenshot} target="_blank" rel="noopener noreferrer">
+                    <img
+                      src={selected.transferScreenshot}
+                      alt="إيصال التحويل"
+                      className="w-full rounded-lg border border-border cursor-pointer hover:opacity-90 transition-opacity"
+                    />
+                  </a>
+                  <p className="text-[10px] text-muted-foreground mt-1">اضغطي على الصورة لعرضها بحجم كامل</p>
+                </Section>
+              )}
             </div>
           )}
         </DialogContent>

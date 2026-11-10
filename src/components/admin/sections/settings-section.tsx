@@ -17,6 +17,10 @@ export function SettingsSection() {
     email: "",
     phone: "",
     freeShippingThreshold: 100,
+    bankName: "",
+    bankAccount: "",
+    accountName: "",
+    iban: "",
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -100,6 +104,21 @@ export function SettingsSection() {
           </Field>
         </div>
 
+        <h3 className="text-xs tracking-luxe uppercase text-muted-foreground pt-4 border-t border-border">بيانات التحويل البنكي</h3>
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="اسم البنك">
+            <Input value={settings.bankName ?? ""} onChange={(e) => setSettings({ ...settings, bankName: e.target.value })} className="h-10" />
+          </Field>
+          <Field label="اسم صاحب الحساب">
+            <Input value={settings.accountName ?? ""} onChange={(e) => setSettings({ ...settings, accountName: e.target.value })} className="h-10" />
+          </Field>
+          <Field label="رقم الحساب">
+            <Input value={settings.bankAccount ?? ""} onChange={(e) => setSettings({ ...settings, bankAccount: e.target.value })} className="h-10" dir="ltr" />
+          </Field>
+          <Field label="IBAN (اختياري)">
+            <Input value={settings.iban ?? ""} onChange={(e) => setSettings({ ...settings, iban: e.target.value })} className="h-10" dir="ltr" />
+          </Field>
+        </div>
         <div className="flex justify-end pt-4 border-t border-border">
           <Button onClick={save} disabled={saving}>
             {saving ? "جاري الحفظ..." : "حفظ الإعدادات"}

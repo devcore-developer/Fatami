@@ -122,6 +122,10 @@ export async function getStoreSettings(): Promise<StoreSettings> {
     email: row.email ?? undefined,
     phone: row.phone ?? undefined,
     freeShippingThreshold: row.freeShippingThreshold ?? undefined,
+    bankName: row.bankName ?? undefined,
+    bankAccount: row.bankAccount ?? undefined,
+    accountName: row.accountName ?? undefined,
+    iban: row.iban ?? undefined,
   };
 }
 
@@ -145,7 +149,8 @@ export interface CreateOrderInput {
     quantity: number;
     measurements?: CustomerMeasurements;
   }[];
-  paymentMethod: "UPAYMENTS" | "COD";
+  paymentMethod: "BANK_TRANSFER";
+  transferScreenshot?: string | null;
   notes?: string;
 }
 
@@ -231,6 +236,7 @@ export async function createOrder(
         governorate: input.customer.governorate,
         city: input.customer.city,
         trackingNumber,
+        transferScreenshot: input.transferScreenshot,
         notes: input.notes,
       },
     });
@@ -270,7 +276,7 @@ export async function createOrder(
         status: order.status as Order["status"],
         paymentStatus: order.paymentStatus as Order["paymentStatus"],
         trackingNumber: order.trackingNumber ?? undefined,
-        upaymentsTransactionId: order.upaymentsTransactionId ?? undefined,
+        transferScreenshot: order.transferScreenshot ?? undefined,
       } as Order,
     };
   });
@@ -289,15 +295,11 @@ export async function getOrderByNumber(orderNumber: string, phone?: string) {
 export async function updateOrderPayment(
   orderId: string,
   status: "PAID" | "FAILED" | "CANCELLED" | "REFUNDED" | "PENDING",
-  transactionId?: string,
-  reference?: string
 ) {
   return db.order.update({
     where: { id: orderId },
     data: {
       paymentStatus: status,
-      upaymentsTransactionId: transactionId,
-      upaymentsReference: reference,
       status: status === "PAID" ? "CONFIRMED" : "PENDING",
       updatedAt: new Date(),
     },

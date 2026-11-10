@@ -70,12 +70,7 @@ export async function POST(req: NextRequest) {
   if (!order) return new NextResponse("Order not found", { status: 404 });
 
   if (action === "success") {
-    await updateOrderPayment(
-      order.id,
-      "PAID",
-      `MOCK-${order.orderNumber}`,
-      order.trackingNumber ?? undefined
-    );
+    await updateOrderPayment(order.id, "PAID");
     // Use 303 See Other to convert POST → GET for the callback
     return NextResponse.redirect(
       new URL(`/api/upayments/callback?orderNumber=${order.orderNumber}&transactionId=MOCK-${order.orderNumber}&status=success`, req.url),
