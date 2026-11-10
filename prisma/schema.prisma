@@ -172,6 +172,7 @@ model StoreSettings {
 model StorefrontContent {
   id                   String   @id @default(cuid())
   heroImage            String?
+  mobileHeroImage      String?
   heroTitle            String   @default("الأناقة في أبسط صورها")
   heroDescription      String   @default("تصاميم خالدة تجمع بين الفخامة والبساطة، مصممة بعناية للمرأة العصرية التي تقدّر التفاصيل.")
   heroCollectionLabel  String   @default("مجموعة خريف ٢٠٢٦")

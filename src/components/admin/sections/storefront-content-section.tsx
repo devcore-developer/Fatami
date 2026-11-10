@@ -86,12 +86,22 @@ export function StorefrontContentSection() {
           قسم الهيرو (الواجهة الرئيسية)
         </h2>
 
+        {/* Hero Image — Desktop */}
         <ImageField
-          label="صورة الهيرو"
+          label="صورة الهيرو (ديسكتوب)"
           value={content.heroImage}
           onChange={(url) => setContent({ ...content, heroImage: url })}
           onUpload={(file) => uploadImage(file, "heroImage")}
           onClear={() => setContent({ ...content, heroImage: null })}
+        />
+
+        {/* Hero Image — Mobile */}
+        <ImageField
+          label="صورة الهيرو (موبايل)"
+          value={content.mobileHeroImage}
+          onChange={(url) => setContent({ ...content, mobileHeroImage: url })}
+          onUpload={(file) => uploadImage(file, "mobileHeroImage")}
+          onClear={() => setContent({ ...content, mobileHeroImage: null })}
         />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

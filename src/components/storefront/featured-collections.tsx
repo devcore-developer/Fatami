@@ -59,8 +59,35 @@ export function FeaturedCollections() {
           </h2>
         </div>
 
-        {/* Editorial asymmetric grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 lg:grid-rows-2 gap-3 sm:gap-4 lg:h-[560px]">
+        {/* ── Mobile: Cards with text BELOW image (no overlay) ── */}
+        <div className="grid grid-cols-2 lg:hidden gap-3">
+          {collections.map((c, idx) => (
+            <button
+              key={c.id}
+              onClick={() => openCategory(c.id)}
+              className="group overflow-hidden rounded-2xl border border-hairline bg-surface animate-fade-up"
+              style={{ animationDelay: `${idx * 80}ms` }}
+            >
+              {/* Image */}
+              <div className="relative aspect-[4/5] overflow-hidden bg-beige">
+                <img
+                  src={c.image}
+                  alt={c.title}
+                  className="w-full h-full object-cover img-zoom"
+                  loading="lazy"
+                />
+              </div>
+              {/* Text below image — clearly visible, no overlay */}
+              <div className="p-3 text-center">
+                <h3 className="text-sm font-bold text-charcoal mb-0.5">{c.title}</h3>
+                <p className="text-[10px] text-muted-brand line-clamp-1">{c.subtitle}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+
+        {/* ── Desktop: Editorial asymmetric grid with overlay (unchanged) ── */}
+        <div className="hidden lg:grid lg:grid-cols-4 lg:grid-rows-2 gap-4 lg:h-[560px]">
           {collections.map((c, idx) => (
             <button
               key={c.id}
@@ -75,11 +102,11 @@ export function FeaturedCollections() {
                 loading="lazy"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-charcoal/60 via-charcoal/10 to-transparent" />
-              <div className="absolute inset-0 flex flex-col justify-end p-5 sm:p-7 text-cream">
+              <div className="absolute inset-0 flex flex-col justify-end p-7 text-cream">
                 <p className="text-xs text-cream/75 mb-1.5 font-light">
                   {c.subtitle}
                 </p>
-                <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-3 text-cream">
+                <h3 className="text-xl lg:text-2xl font-bold mb-3 text-cream">
                   {c.title}
                 </h3>
                 <span className="inline-flex items-center gap-2 text-xs text-cream/90 border-b border-cream/40 pb-0.5 w-fit group-hover:border-cream group-hover:gap-3 transition-all duration-300">

@@ -24,6 +24,7 @@ export async function PUT(req: NextRequest) {
       where: { id: "singleton" },
       update: {
         heroImage: body.heroImage,
+        mobileHeroImage: body.mobileHeroImage,
         heroTitle: body.heroTitle,
         heroDescription: body.heroDescription,
         heroCollectionLabel: body.heroCollectionLabel,
@@ -37,6 +38,7 @@ export async function PUT(req: NextRequest) {
       create: {
         id: "singleton",
         heroImage: body.heroImage,
+        mobileHeroImage: body.mobileHeroImage,
         heroTitle: body.heroTitle,
         heroDescription: body.heroDescription,
         heroCollectionLabel: body.heroCollectionLabel,

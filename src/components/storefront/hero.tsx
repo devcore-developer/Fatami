@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 
 interface HeroContent {
   heroImage?: string | null;
+  mobileHeroImage?: string | null;
   heroTitle?: string;
   heroDescription?: string;
   heroCollectionLabel?: string;
@@ -29,7 +30,9 @@ export function Hero() {
       .catch(() => {});
   }, []);
 
-  const heroImage = content.heroImage || images.hero;
+  // Desktop uses heroImage, Mobile uses mobileHeroImage (falls back to heroImage)
+  const desktopHero = content.heroImage || images.hero;
+  const mobileHero = content.mobileHeroImage || content.heroImage || images.hero;
   const heroTitle = content.heroTitle || "الأناقة في أبسط صورها";
   const heroDescription = content.heroDescription || "تصاميم خالدة تجمع بين الفخامة والبساطة، مصممة بعناية للمرأة العصرية التي تقدّر التفاصيل.";
   const heroCollectionLabel = content.heroCollectionLabel || "مجموعة خريف ٢٠٢٦";
@@ -40,23 +43,22 @@ export function Hero() {
     <section className="relative w-full overflow-hidden bg-cream lg:min-h-[600px]">
       {/* ── Desktop layers (hidden on mobile) ── */}
       <div className="absolute inset-0 z-0 hidden lg:block" aria-hidden="true">
-        <img src={heroImage} alt="" className="w-full h-full object-cover object-[75%_center] scale-110 blur-3xl opacity-20" />
+        <img src={desktopHero} alt="" className="w-full h-full object-cover object-[75%_center] scale-110 blur-3xl opacity-20" />
       </div>
       <div className="absolute inset-0 z-10 hidden lg:block">
-        <img src={heroImage} alt="FATAMI DESIGNS" className="w-full h-full object-cover object-[26%_center] hero-mask-horizontal" />
+        <img src={desktopHero} alt="FATAMI DESIGNS" className="w-full h-full object-cover object-[26%_center] hero-mask-horizontal" />
       </div>
       <div className="absolute inset-0 z-10 hidden lg:block bg-gradient-to-r from-transparent via-transparent to-cream/30 pointer-events-none" />
 
-      {/* ── Mobile: Image on top (portrait ratio), NO overlap with text ── */}
+      {/* ── Mobile: Dedicated mobile hero image on top, NO overlap with text ── */}
       <div className="lg:hidden relative w-full h-[420px] overflow-hidden">
-        <img src={heroImage} alt="FATAMI DESIGNS" className="w-full h-full object-cover object-[center_30%]" />
+        <img src={mobileHero} alt="FATAMI DESIGNS" className="w-full h-full object-cover object-[center_30%]" />
         {/* Subtle fade at bottom into cream */}
         <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-b from-transparent to-cream" />
       </div>
 
       {/* ── Text content ── */}
-      {/* Desktop: absolute overlay with right-aligned content | Mobile: below image on cream */}
-      <div className="relative z-20 container-luxe lg:min-h-[600px] lg:absolute lg:inset-0 lg:flex lg:items-center pt-6 pb-10 lg:py-0">
+      <div className="relative z-20 container-luxe lg:absolute lg:inset-0 lg:flex lg:items-center pt-6 pb-10 lg:py-0">
         <div className="w-full lg:w-[50%] lg:ml-auto">
           <div className="max-w-xl animate-fade-up">
             {/* Collection label */}
