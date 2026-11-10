@@ -63,41 +63,70 @@ export function StorefrontFooter() {
             </ul>
           </div>
 
-          {/* Contact */}
+          {/* Contact — fixed icon column for consistent alignment */}
           <div>
             <h4 className="text-xs tracking-luxe text-taupe mb-5 font-medium">تواصل</h4>
-            <ul className="space-y-3.5 text-sm">
-              <li className="flex items-center gap-2.5 text-cream/70">
-                <MapPin className="h-4 w-4 shrink-0 text-taupe" />
-                <span>الكويت</span>
+            <ul className="space-y-4 text-sm">
+              {/* Location */}
+              <li className="flex items-center gap-3">
+                <span className="flex items-center justify-center w-5 h-5 shrink-0">
+                  <MapPin className="h-4 w-4 text-taupe" />
+                </span>
+                <span className="text-cream/70">الكويت</span>
               </li>
-              <li>
-                <a href={`https://wa.me/${storeSettings.whatsapp?.replace(/\D/g, "")}`} className="flex items-center gap-2.5 text-cream/70 hover:text-cream transition-colors" dir="ltr">
-                  <Phone className="h-4 w-4 shrink-0 text-taupe" /> {storeSettings.phone}
+              {/* Phone */}
+              <li className="flex items-center gap-3">
+                <span className="flex items-center justify-center w-5 h-5 shrink-0">
+                  <Phone className="h-4 w-4 text-taupe" />
+                </span>
+                <a
+                  href={`https://wa.me/${storeSettings.whatsapp?.replace(/\D/g, "")}`}
+                  className="text-cream/70 hover:text-cream transition-colors"
+                  dir="ltr"
+                >
+                  {storeSettings.phone}
                 </a>
               </li>
-              <li>
-                <a href={`mailto:${storeSettings.email}`} className="flex items-center gap-2.5 text-cream/70 hover:text-cream transition-colors" dir="ltr">
-                  <Mail className="h-4 w-4 shrink-0 text-taupe" /> {storeSettings.email}
+              {/* Email */}
+              <li className="flex items-center gap-3">
+                <span className="flex items-center justify-center w-5 h-5 shrink-0">
+                  <Mail className="h-4 w-4 text-taupe" />
+                </span>
+                <a
+                  href={`mailto:${storeSettings.email}`}
+                  className="text-cream/70 hover:text-cream transition-colors"
+                  dir="ltr"
+                >
+                  {storeSettings.email}
                 </a>
               </li>
-              <li>
-                <a href={`https://instagram.com/${storeSettings.instagram}`} className="flex items-center gap-2.5 text-cream/70 hover:text-cream transition-colors" dir="ltr">
-                  <Instagram className="h-4 w-4 shrink-0 text-taupe" /> @{storeSettings.instagram}
+              {/* Instagram */}
+              <li className="flex items-center gap-3">
+                <span className="flex items-center justify-center w-5 h-5 shrink-0">
+                  <Instagram className="h-4 w-4 text-taupe" />
+                </span>
+                <a
+                  href={`https://instagram.com/${storeSettings.instagram}`}
+                  className="text-cream/70 hover:text-cream transition-colors"
+                  dir="ltr"
+                >
+                  @{storeSettings.instagram}
                 </a>
               </li>
             </ul>
           </div>
         </div>
 
-        {/* Payment method + copyright */}
-        <div className="mt-12 pt-6 border-t border-cream/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+        {/* Payment methods + copyright */}
+        <div className="mt-12 pt-6 border-t border-cream/10 flex flex-col sm:flex-row items-center justify-between gap-5">
           <p className="text-xs text-cream/40 text-center sm:text-right font-light">
             © {year} FATAMI DESIGNS — جميع الحقوق محفوظة
           </p>
-          <div className="flex items-center gap-2.5 text-xs text-cream/40">
-            <span className="hidden sm:inline">طريقة الدفع</span>
-            <PaymentBadge label="تحويل بنكي" />
+          <div className="flex items-center gap-2">
+            <PaymentLogo label="UPayments" />
+            <PaymentLogo label="KNET" />
+            <PaymentLogo label="VISA" />
+            <PaymentLogo label="Mastercard" />
           </div>
         </div>
       </div>
@@ -105,9 +134,9 @@ export function StorefrontFooter() {
   );
 }
 
-function PaymentBadge({ label }: { label: string }) {
+function PaymentLogo({ label }: { label: string }) {
   return (
-    <span className="px-2.5 py-1 border border-cream/20 text-[10px] font-medium text-cream/60 rounded-full">
+    <span className="inline-flex items-center justify-center h-7 px-2.5 bg-cream/10 border border-cream/15 rounded text-[9px] font-bold text-cream/70 uppercase tracking-wide hover:bg-cream/15 transition-colors">
       {label}
     </span>
   );
@@ -115,7 +144,10 @@ function PaymentBadge({ label }: { label: string }) {
 
 function FooterLink({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) {
   return (
-    <button onClick={onClick} className="text-cream/70 hover:text-cream transition-colors">
+    <button
+      onClick={onClick}
+      className="text-cream/70 hover:text-cream transition-colors"
+    >
       {children}
     </button>
   );

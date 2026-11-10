@@ -37,71 +37,58 @@ export function Hero() {
   const heroSecondaryCtaText = content.heroSecondaryCtaText || "العبايات";
 
   return (
-    <section className="relative w-full overflow-hidden bg-cream">
-      {/* Layer 1: Blurred background for color cohesion */}
-      <div className="absolute inset-0 z-0" aria-hidden="true">
-        <img
-          src={heroImage}
-          alt=""
-          className="w-full h-full object-cover object-[75%_center] scale-110 blur-3xl opacity-20"
-        />
+    <section className="relative w-full overflow-hidden bg-cream lg:min-h-[600px]">
+      {/* ── Desktop layers (hidden on mobile) ── */}
+      <div className="absolute inset-0 z-0 hidden lg:block" aria-hidden="true">
+        <img src={heroImage} alt="" className="w-full h-full object-cover object-[75%_center] scale-110 blur-3xl opacity-20" />
       </div>
-
-      {/* Layer 2: Sharp image with CSS mask — fades right into cream (desktop) */}
       <div className="absolute inset-0 z-10 hidden lg:block">
-        <img
-          src={heroImage}
-          alt="FATAMI DESIGNS — مجموعة خريف ٢٠٢٦"
-          className="w-full h-full object-cover object-[26%_center] hero-mask-horizontal"
-        />
+        <img src={heroImage} alt="FATAMI DESIGNS" className="w-full h-full object-cover object-[26%_center] hero-mask-horizontal" />
       </div>
-
-      {/* Mobile: vertical mask */}
-      <div className="absolute inset-0 z-10 lg:hidden h-[320px] sm:h-[400px]">
-        <img
-          src={heroImage}
-          alt="FATAMI DESIGNS — مجموعة خريف ٢٠٢٦"
-          className="w-full h-full object-cover object-[30%_center] hero-mask-vertical"
-        />
-      </div>
-
-      {/* Layer 3: Gentle cream tint on far right */}
       <div className="absolute inset-0 z-10 hidden lg:block bg-gradient-to-r from-transparent via-transparent to-cream/30 pointer-events-none" />
 
-      {/* Layer 4: Text content — wider container, right-aligned */}
-      <div className="relative z-20 container-luxe lg:min-h-[600px] flex items-center pt-4 pb-12 lg:py-0">
+      {/* ── Mobile: Image on top (portrait ratio), NO overlap with text ── */}
+      <div className="lg:hidden relative w-full h-[420px] overflow-hidden">
+        <img src={heroImage} alt="FATAMI DESIGNS" className="w-full h-full object-cover object-[center_30%]" />
+        {/* Subtle fade at bottom into cream */}
+        <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-b from-transparent to-cream" />
+      </div>
+
+      {/* ── Text content ── */}
+      {/* Desktop: absolute overlay with right-aligned content | Mobile: below image on cream */}
+      <div className="relative z-20 container-luxe lg:min-h-[600px] lg:absolute lg:inset-0 lg:flex lg:items-center pt-6 pb-10 lg:py-0">
         <div className="w-full lg:w-[50%] lg:ml-auto">
           <div className="max-w-xl animate-fade-up">
             {/* Collection label */}
-            <div className="flex items-center gap-3 mb-6">
+            <div className="flex items-center gap-3 mb-4 lg:mb-6">
               <span className="h-px w-10 bg-brown/50" />
               <p className="text-xs tracking-luxe-wide text-brown font-medium">
                 {heroCollectionLabel}
               </p>
             </div>
 
-            {/* Main heading — ONE LINE on desktop, large */}
-            <h1 className="text-[2rem] sm:text-4xl lg:text-[4rem] xl:text-[4.5rem] font-bold leading-[1.1] mb-6 text-charcoal whitespace-nowrap lg:whitespace-nowrap">
+            {/* Main heading */}
+            <h1 className="text-[1.75rem] sm:text-4xl lg:text-[4rem] xl:text-[4.5rem] font-bold leading-[1.15] mb-4 lg:mb-6 text-charcoal whitespace-nowrap lg:whitespace-nowrap">
               {heroTitle}
             </h1>
 
-            {/* Description — larger, softer color, max 2 lines */}
-            <p className="text-sm sm:text-base lg:text-lg xl:text-xl text-muted-brand leading-[1.7] mb-10 max-w-lg line-clamp-2 lg:line-clamp-2">
+            {/* Description */}
+            <p className="text-sm sm:text-base lg:text-lg xl:text-xl text-muted-brand leading-[1.7] mb-6 lg:mb-10 max-w-lg line-clamp-2">
               {heroDescription}
             </p>
 
-            {/* CTAs — taller, more padding */}
-            <div className="flex flex-col sm:flex-row gap-4">
+            {/* CTAs */}
+            <div className="flex flex-col sm:flex-row gap-3 lg:gap-4">
               <button
                 onClick={() => setView("shop")}
-                className="group inline-flex items-center justify-center gap-2.5 bg-charcoal text-cream px-10 py-5 text-sm lg:text-base font-medium hover:bg-dark-brown transition-all duration-300 rounded-full"
+                className="group inline-flex items-center justify-center gap-2.5 bg-charcoal text-cream px-8 py-4 lg:px-10 lg:py-5 text-sm lg:text-base font-medium hover:bg-dark-brown transition-all duration-300 rounded-full"
               >
                 {heroPrimaryCtaText}
                 <ArrowLeft className="h-4 w-4 lg:h-5 lg:w-5 transition-transform duration-300 group-hover:-translate-x-1.5" />
               </button>
               <button
                 onClick={() => openCategory("cat-abayas")}
-                className="inline-flex items-center justify-center border border-brown text-brown px-10 py-5 text-sm lg:text-base font-medium hover:bg-brown hover:text-cream transition-all duration-300 rounded-full"
+                className="inline-flex items-center justify-center border border-brown text-brown px-8 py-4 lg:px-10 lg:py-5 text-sm lg:text-base font-medium hover:bg-brown hover:text-cream transition-all duration-300 rounded-full"
               >
                 {heroSecondaryCtaText}
               </button>

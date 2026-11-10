@@ -14,7 +14,7 @@ export function FeaturedCollections() {
       subtitle: "فخامة الأصالة",
       image: images.collection1,
       span: "lg:col-span-2 lg:row-span-2",
-      h: "h-[340px] lg:h-full",
+      h: "h-[280px] sm:h-[300px] lg:h-full",
     },
     {
       id: "cat-dresses",
@@ -22,7 +22,7 @@ export function FeaturedCollections() {
       subtitle: "إطلالة ساحرة",
       image: images.collection2,
       span: "",
-      h: "h-[260px] lg:h-full",
+      h: "h-[280px] sm:h-[300px] lg:h-full",
     },
     {
       id: "cat-sets",
@@ -30,7 +30,7 @@ export function FeaturedCollections() {
       subtitle: "تناسق مثالي",
       image: images.kimono1,
       span: "",
-      h: "h-[260px] lg:h-full",
+      h: "h-[280px] sm:h-[300px] lg:h-full",
     },
     {
       id: "cat-kaftans",
@@ -38,13 +38,14 @@ export function FeaturedCollections() {
       subtitle: "أناقة المناسبات",
       image: images.collection3,
       span: "lg:col-span-2",
-      h: "h-[260px] lg:h-full",
+      h: "h-[280px] sm:h-[300px] lg:h-full",
     },
   ];
 
   return (
     <section className="py-12 sm:py-16 lg:py-20 bg-cream">
       <div className="container-luxe">
+        {/* Section heading */}
         <div className="text-center mb-8 sm:mb-12">
           <div className="flex items-center justify-center gap-3 mb-3">
             <span className="h-px w-8 bg-brown/40" />
@@ -58,6 +59,7 @@ export function FeaturedCollections() {
           </h2>
         </div>
 
+        {/* Editorial asymmetric grid */}
         <div className="grid grid-cols-1 lg:grid-cols-4 lg:grid-rows-2 gap-3 sm:gap-4 lg:h-[560px]">
           {collections.map((c, idx) => (
             <button
@@ -72,7 +74,7 @@ export function FeaturedCollections() {
                 className="w-full h-full object-cover img-zoom"
                 loading="lazy"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-charcoal/50 via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-charcoal/60 via-charcoal/10 to-transparent" />
               <div className="absolute inset-0 flex flex-col justify-end p-5 sm:p-7 text-cream">
                 <p className="text-xs text-cream/75 mb-1.5 font-light">
                   {c.subtitle}

@@ -64,7 +64,7 @@ export function StorefrontHeader() {
                       التشكيلات
                     </p>
                   </div>
-                  {categories.map((c) => (
+                  {categories.filter((c) => c.slug !== "bottoms").map((c) => (
                     <MenuLink
                       key={c.id}
                       onClick={() => {
@@ -80,17 +80,11 @@ export function StorefrontHeader() {
                       عن المتجر
                     </p>
                   </div>
-                  <MenuLink onClick={() => { setView("about"); setMenuOpen(false); }}>
-                    عن FATAMI
-                  </MenuLink>
                   <MenuLink onClick={() => { setView("contact"); setMenuOpen(false); }}>
                     تواصل معنا
                   </MenuLink>
                   <MenuLink onClick={() => { setView("size-guide"); setMenuOpen(false); }}>
                     دليل المقاسات
-                  </MenuLink>
-                  <MenuLink onClick={() => { setView("shipping-info"); setMenuOpen(false); }}>
-                    الشحن والتوصيل
                   </MenuLink>
                   <MenuLink onClick={() => { setView("returns"); setMenuOpen(false); }}>
                     الإرجاع والاستبدال
