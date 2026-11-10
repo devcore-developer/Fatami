@@ -167,7 +167,6 @@ export async function createOrder(
   return await db.$transaction(async (tx) => {
     const orderItems: OrderItem[] = [];
     let subtotal = 0;
-    const productCache: Record<string, { name: string; nameAr: string; price: number; image?: string }> = {};
 
     for (const line of input.items) {
       const product = await tx.product.findUnique({
@@ -177,30 +176,10 @@ export async function createOrder(
       if (!product) throw new Error(`المنتج غير موجود: ${line.productId}`);
       if (!product.active) throw new Error(`المنتج غير متاح: ${product.nameAr}`);
 
-      const trackStock = product.trackStock ?? true;
-
-      if (trackStock) {
-        const sizeRow = product.sizes.find((s) => s.size === line.size);
-        if (!sizeRow) throw new Error(`المقاس غير متاح: ${line.size}`);
-        if (sizeRow.stock < line.quantity)
-          throw new Error(`الكمية المطلوبة غير متوفرة لـ ${product.nameAr} مقاس ${line.size} (متوفر: ${sizeRow.stock})`);
-
-        await tx.productSize.update({
-          where: { id: sizeRow.id },
-          data: { stock: sizeRow.stock - line.quantity },
-        });
-      }
-      // If trackStock is false, skip stock validation entirely — product is always available.
+      // Stock tracking disabled — all products are always available
 
       const lineTotal = product.price * line.quantity;
       subtotal += lineTotal;
-
-      productCache[product.id] = {
-        name: product.name,
-        nameAr: product.nameAr,
-        price: product.price,
-        image: product.images[0]?.url,
-      };
 
       orderItems.push({
         id: "tmp",

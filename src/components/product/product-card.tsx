@@ -21,15 +21,12 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
   const primaryUrl = primaryImage?.url ?? placeholderUrl;
   const secondaryUrl = secondaryImage?.url ?? primaryUrl;
   const primaryAlt = primaryImage?.alt ?? product.nameAr;
-  const firstAvailableSize = product.sizes?.find((s) => s.stock > 0);
-  const trackStock = product.trackStock ?? true;
-  const outOfStock = trackStock ? !firstAvailableSize : false;
+  const firstAvailableSize = product.sizes?.[0];
   const hasDiscount = product.compareAtPrice && product.compareAtPrice > product.price;
 
   const quickAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (outOfStock) return;
-    addItem(product, firstAvailableSize!.size, 1);
+    if (firstAvailableSize) addItem(product, firstAvailableSize.size, 1);
   };
 
   return (
@@ -39,12 +36,14 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
       onClick={() => openProduct(product.slug)}
     >
       <div className="relative aspect-[4/5] overflow-hidden bg-beige rounded-2xl">
+        {/* Primary image */}
         <img
           src={primaryUrl}
           alt={primaryAlt}
           className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ease-out group-hover:opacity-0"
           loading="lazy"
         />
+        {/* Secondary image on hover */}
         <img
           src={secondaryUrl}
           alt={primaryAlt}
@@ -52,6 +51,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
           loading="lazy"
         />
 
+        {/* Badges */}
         <div className="absolute top-3 right-3 flex flex-col gap-1.5 z-10">
           {product.newArrival && (
             <span className="bg-surface text-charcoal text-[10px] font-medium px-2.5 py-1 rounded-full shadow-sm">
@@ -65,25 +65,17 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
           )}
         </div>
 
-        {outOfStock && (
-          <div className="absolute inset-0 bg-cream/80 flex items-center justify-center backdrop-blur-[1px]">
-            <span className="text-sm font-medium text-charcoal">
-              نفذت الكمية
-            </span>
-          </div>
-        )}
-
-        {!outOfStock && (
-          <button
-            onClick={quickAdd}
-            className="absolute bottom-0 inset-x-0 bg-charcoal text-cream py-3.5 text-xs font-medium translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out flex items-center justify-center gap-2 rounded-b-2xl"
-          >
-            <ShoppingBag className="h-3.5 w-3.5" />
-            إضافة سريعة
-          </button>
-        )}
+        {/* Quick add — slides up on hover (desktop) */}
+        <button
+          onClick={quickAdd}
+          className="absolute bottom-0 inset-x-0 bg-charcoal text-cream py-3.5 text-xs font-medium translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out flex items-center justify-center gap-2 rounded-b-2xl"
+        >
+          <ShoppingBag className="h-3.5 w-3.5" />
+          إضافة سريعة
+        </button>
       </div>
 
+      {/* Product info */}
       <div className="pt-3.5 pb-1">
         <h3 className="text-sm font-medium mb-1.5 line-clamp-1 leading-snug text-charcoal">
           {product.nameAr}

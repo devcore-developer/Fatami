@@ -149,14 +149,12 @@ export function ProductsSection() {
                 <th className="py-3 px-3 text-xs tracking-luxe uppercase text-muted-foreground">المنتج</th>
                 <th className="py-3 px-3 text-xs tracking-luxe uppercase text-muted-foreground hidden sm:table-cell">الفئة</th>
                 <th className="py-3 px-3 text-xs tracking-luxe uppercase text-muted-foreground">السعر</th>
-                <th className="py-3 px-3 text-xs tracking-luxe uppercase text-muted-foreground hidden md:table-cell">المخزون</th>
                 <th className="py-3 px-3 text-xs tracking-luxe uppercase text-muted-foreground">الحالة</th>
                 <th className="py-3 px-3 text-xs tracking-luxe uppercase text-muted-foreground text-left">إجراءات</th>
               </tr>
             </thead>
             <tbody>
               {products.map((p) => {
-                const totalStock = p.sizes?.reduce((s: number, x: any) => s + x.stock, 0) ?? 0;
                 const cat = categories.find((c) => c.id === p.categoryId);
                 return (
                   <tr key={p.id} className="border-t border-border hover:bg-secondary/30">
@@ -177,13 +175,6 @@ export function ProductsSection() {
                     </td>
                     <td className="py-3 px-3 hidden sm:table-cell text-xs">{cat?.nameAr ?? "—"}</td>
                     <td className="py-3 px-3 font-medium">{formatPrice(p.price)}</td>
-                    <td className="py-3 px-3 hidden md:table-cell">
-                      {p.trackStock === false ? (
-                        <span className="text-xs text-muted-foreground">غير محدود</span>
-                      ) : (
-                        <span className={totalStock <= 5 ? "text-destructive font-medium" : ""}>{totalStock}</span>
-                      )}
-                    </td>
                     <td className="py-3 px-3">
                       <span className={`text-xs px-2 py-0.5 ${p.active ? "bg-black text-white" : "bg-secondary text-muted-foreground"}`}>
                         {p.active ? "نشط" : "معطّل"}
@@ -298,48 +289,29 @@ export function ProductsSection() {
                 </Field>
               </div>
 
-              {/* Sizes & stock */}
+              {/* Sizes — simple selection, no stock tracking */}
               <div>
-                <div className="flex items-center justify-between mb-3">
-                  <Label className="text-xs">المقاسات والمخزون</Label>
-                  <div className="flex items-center gap-2">
-                    <Label className="text-xs text-muted-foreground">تتبع المخزون</Label>
-                    <Switch
-                      checked={editing.trackStock ?? true}
-                      onCheckedChange={(v) => setEditing({ ...editing, trackStock: v })}
-                    />
-                  </div>
+                <Label className="text-xs mb-3 block">المقاسات المتاحة</Label>
+                <div className="flex flex-wrap gap-2">
+                  {editing.sizes.map((s: any, i: number) => (
+                    <button
+                      key={s.size}
+                      type="button"
+                      onClick={() => {
+                        const sizes = [...editing.sizes];
+                        sizes[i] = { ...sizes[i], stock: s.stock > 0 ? 0 : 99 };
+                        setEditing({ ...editing, sizes });
+                      }}
+                      className={`h-10 min-w-10 px-3 text-sm tracking-luxe uppercase border transition-colors ${
+                        s.stock > 0
+                          ? "bg-charcoal text-cream border-charcoal"
+                          : "border-border text-muted-foreground"
+                      }`}
+                    >
+                      {s.size}
+                    </button>
+                  ))}
                 </div>
-                {editing.trackStock === false ? (
-                  <div className="border border-dashed border-border p-4 text-center bg-secondary/30">
-                    <p className="text-sm text-muted-foreground">
-                      تتبع المخزون معطّل — المنتج متاح دائماً بدون قيد على الكمية
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      مثالي للقطع المفصلة حسب الطلب أو المنتجات غير المحدودة
-                    </p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                    {editing.sizes.map((s: any, i: number) => (
-                      <div key={s.size} className="border border-border p-2">
-                        <p className="text-xs font-bold tracking-luxe text-center mb-1">{s.size}</p>
-                        <Input
-                          type="number"
-                          min={0}
-                          value={s.stock}
-                          onChange={(e) => {
-                            const sizes = [...editing.sizes];
-                            sizes[i] = { ...sizes[i], stock: Number(e.target.value) };
-                            setEditing({ ...editing, sizes });
-                          }}
-                          className="h-9 text-center text-sm p-1"
-                          dir="ltr"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
 
               {/* Flags */}

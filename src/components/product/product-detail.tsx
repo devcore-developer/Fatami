@@ -49,12 +49,9 @@ export function ProductDetail() {
     );
   }
 
-  const trackStock = product.trackStock ?? true;
-  const availableSizes = trackStock
-    ? (product.sizes ?? []).filter((s) => s.stock > 0)
-    : (product.sizes ?? []);
+  const availableSizes = product.sizes ?? [];
   const selectedSizeObj = (product.sizes ?? []).find((s) => s.size === selectedSize);
-  const isOutOfStock = trackStock ? availableSizes.length === 0 : false;
+  const isOutOfStock = false;
   const hasDiscount = product.compareAtPrice && product.compareAtPrice > product.price;
   const productImages = product.images ?? [];
   const activeImgObj = productImages[activeImg] ?? productImages[0];
@@ -197,7 +194,7 @@ export function ProductDetail() {
               </div>
               <div className="flex flex-wrap gap-2">
                 {(product.sizes ?? []).map((s) => {
-                  const disabled = trackStock && s.stock === 0;
+                  const disabled = false;
                   return (
                     <button
                       key={s.size}
@@ -216,11 +213,6 @@ export function ProductDetail() {
                   );
                 })}
               </div>
-              {trackStock && selectedSizeObj && selectedSizeObj.stock <= 3 && selectedSizeObj.stock > 0 && (
-                <p className="text-xs text-foreground mt-2">
-                  بقي {selectedSizeObj.stock} قطع فقط — سارعي بالطلب
-                </p>
-              )}
             </div>
 
             {/* Custom measurements toggle */}
