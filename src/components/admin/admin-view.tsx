@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from "react";
 import { useUI } from "@/store";
 import { StorefrontHeader } from "@/components/storefront/header";
 import { StorefrontFooter } from "@/components/storefront/footer";
-import { AnnouncementBar } from "@/components/storefront/announcement-bar";
 import { AdminLogin } from "@/components/admin/admin-login";
 import { AdminDashboard } from "@/components/admin/admin-dashboard";
 import { Button } from "@/components/ui/button";
@@ -46,7 +45,6 @@ export function AdminView() {
   if (!authed) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
-        <AnnouncementBar />
         <StorefrontHeader />
         <main className="flex-1 flex items-center justify-center py-12">
           <AdminLogin onSuccess={(u) => { setAuthed(true); setAdminUser(u); }} />

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import { AnnouncementBar } from "@/components/storefront/announcement-bar";
 import { StorefrontHeader } from "@/components/storefront/header";
 import { StorefrontFooter } from "@/components/storefront/footer";
 import { HomePage } from "@/components/storefront/home-page";
@@ -19,7 +18,6 @@ export default function Home() {
   const { view } = useUI();
   const { toast } = useToast();
 
-  // Handle payment redirect hash on mount
   useEffect(() => {
     if (typeof window === "undefined") return;
     const hash = window.location.hash.slice(1);
@@ -41,12 +39,9 @@ export default function Home() {
     }
   }, [toast]);
 
-  // Admin is now at /admin route — no admin access in public storefront
-
   return (
     <CatalogProvider>
       <div className="min-h-screen flex flex-col bg-background">
-        <AnnouncementBar />
         <StorefrontHeader />
 
         <main className="flex-1">
