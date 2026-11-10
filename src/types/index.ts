@@ -9,10 +9,10 @@ export type SizeCode =
   | "XXL";
 
 export interface SizeMeasurement {
-  shoulder: number; // inches
+  shoulder: number;
   chest: number;
   waist: number;
-  hips: number | string; // can be range "42-43"
+  hips: number | string;
 }
 
 export interface ProductSize {
@@ -32,7 +32,7 @@ export interface Product {
   name: string;
   nameAr: string;
   description: string;
-  price: number; // KWD
+  price: number;
   compareAtPrice?: number;
   categoryId: string;
   images: ProductImage[];
@@ -41,6 +41,7 @@ export interface Product {
   newArrival: boolean;
   bestSeller: boolean;
   active: boolean;
+  trackStock: boolean;
   fabric?: string;
   care?: string;
   createdAt: string;
@@ -56,7 +57,7 @@ export interface Category {
 }
 
 export interface CartItem {
-  id: string; // unique cart line id
+  id: string;
   productId: string;
   product: Product;
   size: SizeCode;
@@ -77,7 +78,7 @@ export interface KuwaitGovernorate {
   id: string;
   name: string;
   nameAr: string;
-  shippingCost: number; // KWD
+  shippingCost: number;
 }
 
 export interface ShippingRate {
@@ -112,7 +113,7 @@ export interface OrderItem {
   productImage?: string;
   size: SizeCode;
   quantity: number;
-  price: number; // snapshot at purchase time
+  price: number;
   measurements?: CustomerMeasurements;
 }
 
@@ -174,7 +175,6 @@ export interface StoreSettings {
   freeShippingThreshold?: number;
 }
 
-// UI / view state
 export type StoreView =
   | "home"
   | "shop"

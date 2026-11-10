@@ -11,6 +11,7 @@ import {
   FolderTree,
   TrendingUp,
   Users,
+  Home,
 } from "lucide-react";
 import { DashboardHome } from "@/components/admin/sections/dashboard-home";
 import { ProductsSection } from "@/components/admin/sections/products-section";
@@ -20,6 +21,7 @@ import { DiscountsSection } from "@/components/admin/sections/discounts-section"
 import { ShippingSection } from "@/components/admin/sections/shipping-section";
 import { SettingsSection } from "@/components/admin/sections/settings-section";
 import { CustomersSection } from "@/components/admin/sections/customers-section";
+import { StorefrontContentSection } from "@/components/admin/sections/storefront-content-section";
 
 type Section =
   | "dashboard"
@@ -29,6 +31,7 @@ type Section =
   | "customers"
   | "discounts"
   | "shipping"
+  | "storefront"
   | "settings";
 
 const NAV: { id: Section; label: string; icon: React.ReactNode }[] = [
@@ -37,6 +40,7 @@ const NAV: { id: Section; label: string; icon: React.ReactNode }[] = [
   { id: "orders", label: "الطلبات", icon: <ShoppingCart className="h-4 w-4" /> },
   { id: "categories", label: "الفئات", icon: <FolderTree className="h-4 w-4" /> },
   { id: "customers", label: "العملاء", icon: <Users className="h-4 w-4" /> },
+  { id: "storefront", label: "المتجر", icon: <Home className="h-4 w-4" /> },
   { id: "discounts", label: "أكواد الخصم", icon: <Tag className="h-4 w-4" /> },
   { id: "shipping", label: "الشحن", icon: <Truck className="h-4 w-4" /> },
   { id: "settings", label: "الإعدادات", icon: <Settings className="h-4 w-4" /> },
@@ -48,7 +52,6 @@ export function AdminDashboard() {
 
   return (
     <div className="flex">
-      {/* Sidebar */}
       <aside
         className={`${
           sidebarOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"
@@ -72,7 +75,6 @@ export function AdminDashboard() {
         </nav>
       </aside>
 
-      {/* Overlay for mobile */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-20 bg-black/40 lg:hidden"
@@ -80,9 +82,7 @@ export function AdminDashboard() {
         />
       )}
 
-      {/* Main */}
       <div className="flex-1 min-w-0">
-        {/* Mobile section toggle */}
         <div className="lg:hidden bg-background border-b border-border p-3 sticky top-16 z-20">
           <button
             onClick={() => setSidebarOpen(true)}
@@ -99,6 +99,7 @@ export function AdminDashboard() {
           {section === "orders" && <OrdersSection />}
           {section === "categories" && <CategoriesSection />}
           {section === "customers" && <CustomersSection />}
+          {section === "storefront" && <StorefrontContentSection />}
           {section === "discounts" && <DiscountsSection />}
           {section === "shipping" && <ShippingSection />}
           {section === "settings" && <SettingsSection />}

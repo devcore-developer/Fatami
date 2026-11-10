@@ -12,7 +12,6 @@ import { CartDrawer } from "@/components/cart/cart-drawer";
 import { CheckoutView } from "@/components/checkout/checkout-view";
 import { StaticPages } from "@/components/storefront/static-pages";
 import { CatalogProvider } from "@/components/storefront/catalog-provider";
-import { AdminView } from "@/components/admin/admin-view";
 import { useUI } from "@/store";
 import { useToast } from "@/hooks/use-toast";
 
@@ -20,7 +19,7 @@ export default function Home() {
   const { view } = useUI();
   const { toast } = useToast();
 
-  // Handle payment redirect hash on mount (e.g. #payment=success&order=FD-2026-...)
+  // Handle payment redirect hash on mount
   useEffect(() => {
     if (typeof window === "undefined") return;
     const hash = window.location.hash.slice(1);
@@ -31,29 +30,18 @@ export default function Home() {
     const targetView = params.get("__view") || params.get("view");
     if (payment && order) {
       if (payment === "success") {
-        toast({
-          title: "تم الدفع بنجاح",
-          description: `رقم الطلب: ${order}`,
-        });
+        toast({ title: "تم الدفع بنجاح", description: `رقم الطلب: ${order}` });
       } else if (payment === "failed") {
-        toast({
-          title: "فشل الدفع",
-          description: `رقم الطلب: ${order}`,
-          variant: "destructive",
-        });
+        toast({ title: "فشل الدفع", description: `رقم الطلب: ${order}`, variant: "destructive" });
       }
       if (targetView === "order-tracking") {
         useUI.setState({ view: "order-tracking" });
       }
-      // Clear the hash so it doesn't re-trigger
       window.history.replaceState(null, "", window.location.pathname);
     }
   }, [toast]);
 
-  // Admin view is rendered full-screen, outside the storefront chrome
-  if (view === "admin") {
-    return <AdminView />;
-  }
+  // Admin is now at /admin route — no admin access in public storefront
 
   return (
     <CatalogProvider>

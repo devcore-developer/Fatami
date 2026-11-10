@@ -1,5 +1,4 @@
 // Server-side data access layer for FATAMI DESIGNS
-// All functions query Prisma directly. Used by API routes & server components.
 
 import { db } from "@/lib/db";
 import type {
@@ -74,9 +73,7 @@ export async function getProductById(id: string) {
 
 // ---------- Categories ----------
 export async function getCategories(): Promise<Category[]> {
-  const rows = await db.category.findMany({
-    orderBy: { name: "asc" },
-  });
+  const rows = await db.category.findMany({ orderBy: { name: "asc" } });
   return rows.map((r) => ({
     id: r.id,
     name: r.name,
@@ -101,22 +98,31 @@ export async function getGovernorateRates() {
 }
 
 export async function getShippingCost(governorateAr: string): Promise<number> {
-  const row = await db.governorateRate.findUnique({
-    where: { nameAr: governorateAr },
-  });
+  const row = await db.governorateRate.findUnique({ where: { nameAr: governorateAr } });
   return row?.shippingCost ?? 0;
 }
 
 // ---------- Settings ----------
 export async function getStoreSettings(): Promise<StoreSettings> {
   const row = await db.storeSettings.findUnique({ where: { id: "singleton" } });
-  return (
-    row ?? {
+  if (!row) {
+    return {
       brandName: "FATAMI DESIGNS",
       brandTagline: "أناقة بلا حدود",
       currency: "KWD",
-    }
-  );
+    };
+  }
+  return {
+    brandName: row.brandName,
+    brandTagline: row.brandTagline,
+    currency: row.currency,
+    whatsapp: row.whatsapp ?? undefined,
+    instagram: row.instagram ?? undefined,
+    tiktok: row.tiktok ?? undefined,
+    email: row.email ?? undefined,
+    phone: row.phone ?? undefined,
+    freeShippingThreshold: row.freeShippingThreshold ?? undefined,
+  };
 }
 
 // ---------- Orders ----------
@@ -143,7 +149,6 @@ export interface CreateOrderInput {
   notes?: string;
 }
 
-// Generate next order number sequence
 async function nextOrderNumber(): Promise<string> {
   const count = await db.order.count();
   const year = new Date().getFullYear();
@@ -158,9 +163,8 @@ function generateTrackingNumber(): string {
 
 export async function createOrder(
   input: CreateOrderInput
-): Promise<{ order: Order; }> {
+): Promise<{ order: Order }> {
   return await db.$transaction(async (tx) => {
-    // 1) Validate & lock stock per line
     const orderItems: OrderItem[] = [];
     let subtotal = 0;
     const productCache: Record<string, { name: string; nameAr: string; price: number; image?: string }> = {};
@@ -173,16 +177,20 @@ export async function createOrder(
       if (!product) throw new Error(`المنتج غير موجود: ${line.productId}`);
       if (!product.active) throw new Error(`المنتج غير متاح: ${product.nameAr}`);
 
-      const sizeRow = product.sizes.find((s) => s.size === line.size);
-      if (!sizeRow) throw new Error(`المقاس غير متاح: ${line.size}`);
-      if (sizeRow.stock < line.quantity)
-        throw new Error(`الكمية المطلوبة غير متوفرة لـ ${product.nameAr} مقاس ${line.size} (متوفر: ${sizeRow.stock})`);
+      const trackStock = product.trackStock ?? true;
 
-      // Decrement stock
-      await tx.productSize.update({
-        where: { id: sizeRow.id },
-        data: { stock: sizeRow.stock - line.quantity },
-      });
+      if (trackStock) {
+        const sizeRow = product.sizes.find((s) => s.size === line.size);
+        if (!sizeRow) throw new Error(`المقاس غير متاح: ${line.size}`);
+        if (sizeRow.stock < line.quantity)
+          throw new Error(`الكمية المطلوبة غير متوفرة لـ ${product.nameAr} مقاس ${line.size} (متوفر: ${sizeRow.stock})`);
+
+        await tx.productSize.update({
+          where: { id: sizeRow.id },
+          data: { stock: sizeRow.stock - line.quantity },
+        });
+      }
+      // If trackStock is false, skip stock validation entirely — product is always available.
 
       const lineTotal = product.price * line.quantity;
       subtotal += lineTotal;
@@ -207,14 +215,12 @@ export async function createOrder(
       });
     }
 
-    // 2) Shipping cost
     const gov = await tx.governorateRate.findUnique({
       where: { nameAr: input.customer.governorate },
     });
     if (!gov) throw new Error(`المحافظة غير صحيحة: ${input.customer.governorate}`);
     const shippingCost = gov.shippingCost;
 
-    // 3) Create customer
     const customer = await tx.customer.create({
       data: {
         email: input.customer.email,
@@ -230,7 +236,6 @@ export async function createOrder(
       },
     });
 
-    // 4) Create order
     const orderNumber = await nextOrderNumber();
     const trackingNumber = generateTrackingNumber();
     const order = await tx.order.create({
@@ -251,7 +256,6 @@ export async function createOrder(
       },
     });
 
-    // 5) Create order items (snapshots)
     for (let i = 0; i < orderItems.length; i++) {
       const oi = orderItems[i];
       await tx.orderItem.create({
@@ -271,11 +275,23 @@ export async function createOrder(
     return {
       order: {
         ...order,
+        createdAt: order.createdAt.toISOString(),
+        updatedAt: order.updatedAt.toISOString(),
         items: orderItems.map((oi) => ({ ...oi, orderId: order.id })),
-        customer: customer as Customer,
+        customer: {
+          ...customer,
+          email: customer.email ?? undefined,
+          apartment: customer.apartment ?? undefined,
+          block: customer.block ?? undefined,
+          postalCode: customer.postalCode ?? undefined,
+          createdAt: customer.createdAt.toISOString(),
+          updatedAt: customer.updatedAt.toISOString(),
+        } as Customer,
         paymentMethod: order.paymentMethod as "UPAYMENTS" | "COD",
         status: order.status as Order["status"],
         paymentStatus: order.paymentStatus as Order["paymentStatus"],
+        trackingNumber: order.trackingNumber ?? undefined,
+        upaymentsTransactionId: order.upaymentsTransactionId ?? undefined,
       } as Order,
     };
   });
@@ -284,10 +300,7 @@ export async function createOrder(
 export async function getOrderByNumber(orderNumber: string, phone?: string) {
   const order = await db.order.findUnique({
     where: { orderNumber },
-    include: {
-      customer: true,
-      items: true,
-    },
+    include: { customer: true, items: true },
   });
   if (!order) return null;
   if (phone && order.customer.phone !== phone) return null;
@@ -358,6 +371,7 @@ function mapProduct(r: any): Product {
     newArrival: r.newArrival,
     bestSeller: r.bestSeller,
     active: r.active,
+    trackStock: r.trackStock ?? true,
     fabric: r.fabric ?? undefined,
     care: r.care ?? undefined,
     createdAt: r.createdAt.toISOString(),

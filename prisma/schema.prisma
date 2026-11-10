@@ -2,7 +2,7 @@
 // Note: sandbox uses SQLite locally. For production (Vercel + PostgreSQL),
 // change `provider = "sqlite"` to `provider = "postgresql"` and use a
 // `postgresql://` connection string in DATABASE_URL. All field types below
-// are PostgreSQL-compatible (String/Int/Boolean/DateTime/Json).
+// are PostgreSQL-compatible.
 
 generator client {
   provider = "prisma-client-js"
@@ -18,7 +18,7 @@ model AdminUser {
   email        String   @unique
   name         String
   passwordHash String
-  role         String   @default("ADMIN") // ADMIN | EDITOR
+  role         String   @default("ADMIN")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
@@ -50,6 +50,7 @@ model Product {
   newArrival     Boolean       @default(false)
   bestSeller     Boolean       @default(false)
   active         Boolean       @default(true)
+  trackStock     Boolean       @default(true)
   fabric         String?
   care           String?
   createdAt      DateTime      @default(now())
@@ -70,7 +71,7 @@ model ProductSize {
   id        String  @id @default(cuid())
   productId String
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  size      String  // XS | S | M | L | XL | XXL
+  size      String
   stock     Int     @default(0)
 }
 
@@ -141,7 +142,7 @@ model GovernorateRate {
 model DiscountCode {
   id         String    @id @default(cuid())
   code       String    @unique
-  type       String    // PERCENTAGE | FIXED
+  type       String
   value      Float
   active     Boolean   @default(true)
   usageLimit Int?
@@ -163,4 +164,19 @@ model StoreSettings {
   phone                 String?
   freeShippingThreshold Float?
   updatedAt             DateTime @updatedAt
+}
+
+model StorefrontContent {
+  id                   String   @id @default(cuid())
+  heroImage            String?
+  heroTitle            String   @default("الأناقة في أبسط صورها")
+  heroDescription      String   @default("تصاميم خالدة تجمع بين الفخامة والبساطة، مصممة بعناية للمرأة العصرية التي تقدّر التفاصيل.")
+  heroCollectionLabel  String   @default("مجموعة خريف ٢٠٢٦")
+  heroPrimaryCtaText   String   @default("تسوقي الآن")
+  heroSecondaryCtaText String   @default("العبايات")
+  editorialImage       String?
+  editorialTitle       String   @default("الأناقة الخالدة تليق بك")
+  editorialDescription String   @default("اكتشفي مجموعتنا المميزة من التصاميم العصرية المصممة بعناية وأناقة متقنة")
+  editorialCtaText     String   @default("تسوقي المجموعة")
+  updatedAt            DateTime @updatedAt
 }

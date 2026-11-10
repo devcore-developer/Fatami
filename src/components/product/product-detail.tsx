@@ -49,9 +49,12 @@ export function ProductDetail() {
     );
   }
 
-  const availableSizes = (product.sizes ?? []).filter((s) => s.stock > 0);
+  const trackStock = product.trackStock ?? true;
+  const availableSizes = trackStock
+    ? (product.sizes ?? []).filter((s) => s.stock > 0)
+    : (product.sizes ?? []);
   const selectedSizeObj = (product.sizes ?? []).find((s) => s.size === selectedSize);
-  const isOutOfStock = availableSizes.length === 0;
+  const isOutOfStock = trackStock ? availableSizes.length === 0 : false;
   const hasDiscount = product.compareAtPrice && product.compareAtPrice > product.price;
   const productImages = product.images ?? [];
   const activeImgObj = productImages[activeImg] ?? productImages[0];
@@ -107,9 +110,7 @@ export function ProductDetail() {
             onClick={() => openCategory(product.categoryId)}
             className="hover:text-foreground"
           >
-            {useUI.getState().activeCategoryId === product.categoryId
-              ? "الفئة"
-              : "الفئة"}
+            الفئة
           </button>
           <ChevronLeft className="h-3 w-3" />
           <span className="text-foreground">{product.nameAr}</span>
@@ -196,7 +197,7 @@ export function ProductDetail() {
               </div>
               <div className="flex flex-wrap gap-2">
                 {(product.sizes ?? []).map((s) => {
-                  const disabled = s.stock === 0;
+                  const disabled = trackStock && s.stock === 0;
                   return (
                     <button
                       key={s.size}
@@ -215,7 +216,7 @@ export function ProductDetail() {
                   );
                 })}
               </div>
-              {selectedSizeObj && selectedSizeObj.stock <= 3 && selectedSizeObj.stock > 0 && (
+              {trackStock && selectedSizeObj && selectedSizeObj.stock <= 3 && selectedSizeObj.stock > 0 && (
                 <p className="text-xs text-foreground mt-2">
                   بقي {selectedSizeObj.stock} قطع فقط — سارعي بالطلب
                 </p>
@@ -427,7 +428,7 @@ function MeasurementInput({
         onChange={(e) =>
           onChange(e.target.value === "" ? undefined : Number(e.target.value))
         }
-        placeholder='بوصة'
+        placeholder="بوصة"
         className="w-full h-10 px-3 text-sm bg-secondary border-0 focus:ring-1 focus:ring-ring outline-none"
       />
     </div>

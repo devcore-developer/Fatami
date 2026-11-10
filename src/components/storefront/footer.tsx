@@ -1,6 +1,6 @@
 "use client";
 
-import { Instagram, Mail, Phone } from "lucide-react";
+import { Instagram, Mail, Phone, MapPin } from "lucide-react";
 import { useUI } from "@/store";
 import { categories, storeSettings } from "@/data/catalog";
 
@@ -9,36 +9,29 @@ export function StorefrontFooter() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="bg-black text-white mt-auto">
-      <div className="container-luxe py-14 sm:py-20">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-10">
+    <footer className="bg-charcoal text-cream mt-auto">
+      <div className="container-luxe py-14 sm:py-16 lg:py-20">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12">
           {/* Brand */}
-          <div className="col-span-2 md:col-span-1">
-            <div className="flex flex-col">
-              <span className="text-2xl font-bold tracking-luxe-wide">FATAMI</span>
-              <span className="text-[11px] tracking-luxe-wide text-white/60 mt-1">
-                DESIGNS
-              </span>
+          <div className="lg:col-span-1">
+            <div className="flex flex-col mb-5">
+              <span className="text-2xl font-bold tracking-luxe-wide leading-none text-cream">FATAMI</span>
+              <span className="text-[10px] tracking-luxe-wide text-taupe mt-1.5">DESIGNS</span>
             </div>
-            <p className="text-sm text-white/60 mt-4 leading-relaxed max-w-xs">
+            <p className="text-sm text-cream/55 leading-[1.8] max-w-xs font-light">
               علامة أزياء كويتية فاخرة. نصمم قطعاً خالدة تجمع بين الأصالة والمعاصرة،
               بجودة عالية وأناقة لا تُضاهى.
             </p>
           </div>
 
-          {/* Shop */}
+          {/* Quick navigation */}
           <div>
-            <h4 className="text-xs tracking-luxe uppercase text-white/40 mb-4">
-              تسوقي
-            </h4>
+            <h4 className="text-xs tracking-luxe text-taupe mb-5 font-medium">تسوقي</h4>
             <ul className="space-y-3 text-sm">
               <li>
                 <button
-                  onClick={() => {
-                    useUI.setState({ activeCategoryId: null });
-                    setView("shop");
-                  }}
-                  className="text-white/80 hover:text-white transition-colors"
+                  onClick={() => { useUI.setState({ activeCategoryId: null }); setView("shop"); }}
+                  className="text-cream/70 hover:text-cream transition-colors"
                 >
                   جميع المنتجات
                 </button>
@@ -47,7 +40,7 @@ export function StorefrontFooter() {
                 <li key={c.id}>
                   <button
                     onClick={() => openCategory(c.id)}
-                    className="text-white/80 hover:text-white transition-colors"
+                    className="text-cream/70 hover:text-cream transition-colors"
                   >
                     {c.nameAr}
                   </button>
@@ -56,11 +49,9 @@ export function StorefrontFooter() {
             </ul>
           </div>
 
-          {/* Help */}
+          {/* Customer service */}
           <div>
-            <h4 className="text-xs tracking-luxe uppercase text-white/40 mb-4">
-              المساعدة
-            </h4>
+            <h4 className="text-xs tracking-luxe text-taupe mb-5 font-medium">خدمة العملاء</h4>
             <ul className="space-y-3 text-sm">
               <li><FooterLink onClick={() => setView("size-guide")}>دليل المقاسات</FooterLink></li>
               <li><FooterLink onClick={() => setView("shipping-info")}>الشحن والتوصيل</FooterLink></li>
@@ -74,55 +65,41 @@ export function StorefrontFooter() {
 
           {/* Contact */}
           <div>
-            <h4 className="text-xs tracking-luxe uppercase text-white/40 mb-4">
-              تواصل
-            </h4>
-            <ul className="space-y-3 text-sm">
+            <h4 className="text-xs tracking-luxe text-taupe mb-5 font-medium">تواصل</h4>
+            <ul className="space-y-3.5 text-sm">
+              <li className="flex items-center gap-2.5 text-cream/70">
+                <MapPin className="h-4 w-4 shrink-0 text-taupe" />
+                <span>الكويت</span>
+              </li>
               <li>
-                <a
-                  href={`https://wa.me/${storeSettings.whatsapp?.replace(/\D/g, "")}`}
-                  className="flex items-center gap-2 text-white/80 hover:text-white transition-colors"
-                  dir="ltr"
-                >
-                  <Phone className="h-4 w-4" /> {storeSettings.phone}
+                <a href={`https://wa.me/${storeSettings.whatsapp?.replace(/\D/g, "")}`} className="flex items-center gap-2.5 text-cream/70 hover:text-cream transition-colors" dir="ltr">
+                  <Phone className="h-4 w-4 shrink-0 text-taupe" /> {storeSettings.phone}
                 </a>
               </li>
               <li>
-                <a
-                  href={`mailto:${storeSettings.email}`}
-                  className="flex items-center gap-2 text-white/80 hover:text-white transition-colors"
-                  dir="ltr"
-                >
-                  <Mail className="h-4 w-4" /> {storeSettings.email}
+                <a href={`mailto:${storeSettings.email}`} className="flex items-center gap-2.5 text-cream/70 hover:text-cream transition-colors" dir="ltr">
+                  <Mail className="h-4 w-4 shrink-0 text-taupe" /> {storeSettings.email}
                 </a>
               </li>
               <li>
-                <a
-                  href={`https://instagram.com/${storeSettings.instagram}`}
-                  className="flex items-center gap-2 text-white/80 hover:text-white transition-colors"
-                  dir="ltr"
-                >
-                  <Instagram className="h-4 w-4" /> @{storeSettings.instagram}
+                <a href={`https://instagram.com/${storeSettings.instagram}`} className="flex items-center gap-2.5 text-cream/70 hover:text-cream transition-colors" dir="ltr">
+                  <Instagram className="h-4 w-4 shrink-0 text-taupe" /> @{storeSettings.instagram}
                 </a>
               </li>
             </ul>
           </div>
         </div>
 
-        <div className="mt-14 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-white/40 text-center sm:text-right">
+        {/* Payment methods + copyright — NO admin link */}
+        <div className="mt-12 pt-6 border-t border-cream/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-xs text-cream/40 text-center sm:text-right font-light">
             © {year} FATAMI DESIGNS — جميع الحقوق محفوظة
           </p>
-          <div className="flex items-center gap-3 text-xs text-white/40">
-            <span>الدفع الآمن عبر</span>
-            <span className="px-2 py-1 border border-white/20 tracking-luxe">UPAYMENTS</span>
-            <button
-              onClick={() => useUI.getState().setView("admin")}
-              className="text-white/30 hover:text-white/60 transition-colors"
-              title="لوحة الإدارة"
-            >
-              إدارة
-            </button>
+          <div className="flex items-center gap-2.5 text-xs text-cream/40">
+            <span className="hidden sm:inline">طرق الدفع</span>
+            <PaymentBadge label="UPayments" />
+            <PaymentBadge label="VISA" />
+            <PaymentBadge label="Mastercard" />
           </div>
         </div>
       </div>
@@ -130,12 +107,17 @@ export function StorefrontFooter() {
   );
 }
 
+function PaymentBadge({ label }: { label: string }) {
+  return (
+    <span className="px-2.5 py-1 border border-cream/20 text-[10px] font-medium text-cream/60 rounded-full">
+      {label}
+    </span>
+  );
+}
+
 function FooterLink({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) {
   return (
-    <button
-      onClick={onClick}
-      className="text-white/80 hover:text-white transition-colors"
-    >
+    <button onClick={onClick} className="text-cream/70 hover:text-cream transition-colors">
       {children}
     </button>
   );

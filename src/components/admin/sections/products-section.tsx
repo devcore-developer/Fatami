@@ -66,6 +66,7 @@ export function ProductsSection() {
       newArrival: false,
       bestSeller: false,
       active: true,
+      trackStock: true,
       fabric: "",
       care: "",
     });
@@ -75,6 +76,7 @@ export function ProductsSection() {
   const openEdit = (p: any) => {
     setEditing({
       ...p,
+      trackStock: p.trackStock ?? true,
       images: p.images ?? [],
       sizes: ALL_SIZES.map((s) => {
         const existing = p.sizes?.find((x: any) => x.size === s);
@@ -176,7 +178,11 @@ export function ProductsSection() {
                     <td className="py-3 px-3 hidden sm:table-cell text-xs">{cat?.nameAr ?? "—"}</td>
                     <td className="py-3 px-3 font-medium">{formatPrice(p.price)}</td>
                     <td className="py-3 px-3 hidden md:table-cell">
-                      <span className={totalStock <= 5 ? "text-destructive font-medium" : ""}>{totalStock}</span>
+                      {p.trackStock === false ? (
+                        <span className="text-xs text-muted-foreground">غير محدود</span>
+                      ) : (
+                        <span className={totalStock <= 5 ? "text-destructive font-medium" : ""}>{totalStock}</span>
+                      )}
                     </td>
                     <td className="py-3 px-3">
                       <span className={`text-xs px-2 py-0.5 ${p.active ? "bg-black text-white" : "bg-secondary text-muted-foreground"}`}>
@@ -213,11 +219,11 @@ export function ProductsSection() {
             <div className="px-6 py-4 space-y-5">
               {/* Images */}
               <div>
-                <Label className="text-xs mb-2 block">صور المنتج</Label>
+                <Label className="text-xs mb-2 block">صور المنتج (رابط URL)</Label>
                 <div className="space-y-2">
                   {editing.images.map((img: any, i: number) => (
                     <div key={i} className="flex items-center gap-2">
-                      <img src={img.url} alt="" className="h-12 w-10 object-cover bg-secondary shrink-0" />
+                      <img src={img.url} alt="" className="h-12 w-10 object-cover bg-secondary" />
                       <Input
                         value={img.url}
                         onChange={(e) => {
@@ -227,32 +233,8 @@ export function ProductsSection() {
                         }}
                         className="h-9 flex-1"
                         dir="ltr"
-                        placeholder="https://... أو ارفعي صورة"
+                        placeholder="https://..."
                       />
-                      <label className="h-9 px-3 inline-flex items-center justify-center bg-secondary hover:bg-secondary/70 text-xs cursor-pointer whitespace-nowrap">
-                        رفع
-                        <input
-                          type="file"
-                          accept="image/jpeg,image/png,image/webp"
-                          className="hidden"
-                          onChange={async (e) => {
-                            const f = e.target.files?.[0];
-                            if (!f) return;
-                            const fd = new FormData();
-                            fd.append("file", f);
-                            const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
-                            const json = await res.json();
-                            if (json.success) {
-                              const images = [...editing.images];
-                              images[i] = { url: json.data.url, alt: editing.nameAr };
-                              setEditing({ ...editing, images });
-                              toast({ title: "تم رفع الصورة" });
-                            } else {
-                              toast({ title: "فشل الرفع", description: json.error, variant: "destructive" });
-                            }
-                          }}
-                        />
-                      </label>
                       <button
                         onClick={() => setEditing({ ...editing, images: editing.images.filter((_: any, idx: number) => idx !== i) })}
                         className="h-9 w-9 flex items-center justify-center hover:bg-secondary text-destructive"
@@ -268,38 +250,9 @@ export function ProductsSection() {
                     className="gap-2"
                   >
                     <Plus className="h-3 w-3" />
-                    إضافة صورة (رابط)
+                    إضافة صورة
                   </Button>
-                  <label className="inline-flex items-center gap-2 h-9 px-4 bg-black text-white text-xs cursor-pointer hover:bg-black/90 ml-2">
-                    <Plus className="h-3 w-3" />
-                    رفع صورة جديدة
-                    <input
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp"
-                      className="hidden"
-                      onChange={async (e) => {
-                        const f = e.target.files?.[0];
-                        if (!f) return;
-                        const fd = new FormData();
-                        fd.append("file", f);
-                        const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
-                        const json = await res.json();
-                        if (json.success) {
-                          setEditing({
-                            ...editing,
-                            images: [...editing.images, { url: json.data.url, alt: editing.nameAr }],
-                          });
-                          toast({ title: "تم رفع الصورة" });
-                        } else {
-                          toast({ title: "فشل الرفع", description: json.error, variant: "destructive" });
-                        }
-                      }}
-                    />
-                  </label>
                 </div>
-                <p className="text-[10px] text-muted-foreground mt-1">
-                  يتم رفع الصور إلى Cloudflare R2 تلقائياً. أو أدخلي رابط URL مباشر.
-                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -347,26 +300,46 @@ export function ProductsSection() {
 
               {/* Sizes & stock */}
               <div>
-                <Label className="text-xs mb-2 block">المقاسات والمخزون</Label>
-                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                  {editing.sizes.map((s: any, i: number) => (
-                    <div key={s.size} className="border border-border p-2">
-                      <p className="text-xs font-bold tracking-luxe text-center mb-1">{s.size}</p>
-                      <Input
-                        type="number"
-                        min={0}
-                        value={s.stock}
-                        onChange={(e) => {
-                          const sizes = [...editing.sizes];
-                          sizes[i] = { ...sizes[i], stock: Number(e.target.value) };
-                          setEditing({ ...editing, sizes });
-                        }}
-                        className="h-9 text-center text-sm p-1"
-                        dir="ltr"
-                      />
-                    </div>
-                  ))}
+                <div className="flex items-center justify-between mb-3">
+                  <Label className="text-xs">المقاسات والمخزون</Label>
+                  <div className="flex items-center gap-2">
+                    <Label className="text-xs text-muted-foreground">تتبع المخزون</Label>
+                    <Switch
+                      checked={editing.trackStock ?? true}
+                      onCheckedChange={(v) => setEditing({ ...editing, trackStock: v })}
+                    />
+                  </div>
                 </div>
+                {editing.trackStock === false ? (
+                  <div className="border border-dashed border-border p-4 text-center bg-secondary/30">
+                    <p className="text-sm text-muted-foreground">
+                      تتبع المخزون معطّل — المنتج متاح دائماً بدون قيد على الكمية
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      مثالي للقطع المفصلة حسب الطلب أو المنتجات غير المحدودة
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                    {editing.sizes.map((s: any, i: number) => (
+                      <div key={s.size} className="border border-border p-2">
+                        <p className="text-xs font-bold tracking-luxe text-center mb-1">{s.size}</p>
+                        <Input
+                          type="number"
+                          min={0}
+                          value={s.stock}
+                          onChange={(e) => {
+                            const sizes = [...editing.sizes];
+                            sizes[i] = { ...sizes[i], stock: Number(e.target.value) };
+                            setEditing({ ...editing, sizes });
+                          }}
+                          className="h-9 text-center text-sm p-1"
+                          dir="ltr"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Flags */}
