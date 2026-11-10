@@ -11,22 +11,22 @@ const arabicFont = IBM_Plex_Sans_Arabic({
 });
 
 export const metadata: Metadata = {
-  title: "FATAMI DESIGNS | أزياء فاخرة للمرأة العصرية",
+  title: "Futami DESIGNS | أزياء فاخرة للمرأة العصرية",
   description:
-    "FATAMI DESIGNS — علامة أزياء كويتية فاخرة. تصاميم راقية بجودة عالية للمرأة العصرية. تسوق أحدث الإصدارات والمجموعات المميزة.",
+    "Futami DESIGNS — علامة أزياء كويتية فاخرة. تصاميم راقية بجودة عالية للمرأة العصرية. تسوق أحدث الإصدارات والمجموعات المميزة.",
   keywords: [
-    "FATAMI DESIGNS",
+    "Futami DESIGNS",
     "أزياء كويتية",
     "أزياء نسائية",
     "موضة",
     "Kuwait fashion",
     "luxury fashion",
   ],
-  authors: [{ name: "FATAMI DESIGNS" }],
+  authors: [{ name: "Futami DESIGNS" }],
   openGraph: {
-    title: "FATAMI DESIGNS | أزياء فاخرة",
+    title: "Futami DESIGNS | أزياء فاخرة",
     description: "علامة أزياء كويتية فاخرة للمرأة العصرية",
-    siteName: "FATAMI DESIGNS",
+    siteName: "Futami DESIGNS",
     type: "website",
     locale: "ar_KW",
   },

@@ -58,7 +58,7 @@ export function HomePage() {
           <div className="relative h-[300px] sm:h-[360px] lg:h-full order-1">
             <img
               src={editorialImage}
-              alt="مجموعة FATAMI DESIGNS"
+              alt="مجموعة Futami DESIGNS"
               className="absolute inset-0 w-full h-full object-cover"
             />
           </div>
@@ -93,7 +93,7 @@ export function HomePage() {
           <div className="flex items-center justify-center gap-3 mb-4">
             <span className="h-px w-8 bg-brown/40" />
             <p className="text-xs tracking-luxe-wide text-brown font-medium">
-              انضمي إلى عائلة FATAMI
+              انضمي إلى عائلة Futami
             </p>
             <span className="h-px w-8 bg-brown/40" />
           </div>

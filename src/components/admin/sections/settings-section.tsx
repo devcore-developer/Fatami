@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export function SettingsSection() {
   const [settings, setSettings] = useState<any>({
-    brandName: "FATAMI DESIGNS",
+    brandName: "Futami DESIGNS",
     brandTagline: "أناقة بلا حدود",
     currency: "KWD",
     whatsapp: "",

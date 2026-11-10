@@ -1,4 +1,4 @@
-// Database seed script for FATAMI DESIGNS
+// Database seed script for Futami DESIGNS
 // Run with: bun run scripts/seed.ts
 
 import { PrismaClient } from "@prisma/client";
@@ -24,19 +24,19 @@ const IMG = {
 };
 
 async function main() {
-  console.log("🌱 Seeding FATAMI DESIGNS database...");
+  console.log("🌱 Seeding Futami DESIGNS database...");
 
   await prisma.adminUser.upsert({
-    where: { email: "admin@fatamidesigns.com" },
+    where: { email: "admin@Futamidesigns.com" },
     update: {},
     create: {
-      email: "admin@fatamidesigns.com",
+      email: "admin@Futamidesigns.com",
       name: "مدير المتجر",
       passwordHash: "$2a$10$DEMO_HASH_REPLACE_WITH_BCRYPT_IN_PRODUCTION_xxxxxxxxxxxxxxxxxxxxxxx",
       role: "ADMIN",
     },
   });
-  console.log("  ✓ Admin user created (admin@fatamidesigns.com)");
+  console.log("  ✓ Admin user created (admin@Futamidesigns.com)");
 
   const categoriesData = [
     { name: "Abayas", nameAr: "عبايات", slug: "abayas", image: IMG.abaya1 },
@@ -159,13 +159,13 @@ async function main() {
     update: {},
     create: {
       id: "singleton",
-      brandName: "FATAMI DESIGNS",
+      brandName: "Futami DESIGNS",
       brandTagline: "أناقة بلا حدود",
       currency: "KWD",
       whatsapp: "+96590000000",
-      instagram: "fatami.designs",
-      tiktok: "fatamidesigns",
-      email: "info@fatamidesigns.com",
+      instagram: "Futami.designs",
+      tiktok: "Futamidesigns",
+      email: "info@Futamidesigns.com",
       phone: "+965 9000 0000",
       freeShippingThreshold: 100,
     },
@@ -173,11 +173,11 @@ async function main() {
   console.log("  ✓ Store settings created");
 
   await prisma.discountCode.upsert({
-    where: { code: "FATAMI10" },
+    where: { code: "Futami10" },
     update: {},
-    create: { code: "FATAMI10", type: "PERCENTAGE", value: 10, active: true, usageLimit: 100 },
+    create: { code: "Futami10", type: "PERCENTAGE", value: 10, active: true, usageLimit: 100 },
   });
-  console.log("  ✓ Demo discount code: FATAMI10 (10% off)");
+  console.log("  ✓ Demo discount code: Futami10 (10% off)");
 
   console.log("\n✅ Seed completed successfully");
 }

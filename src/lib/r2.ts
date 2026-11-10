@@ -1,4 +1,4 @@
-// Cloudflare R2 image storage for FATAMI DESIGNS
+// Cloudflare R2 image storage for Futami DESIGNS
 //
 // Uses the S3-compatible API of Cloudflare R2 for server-side uploads.
 // Images are uploaded with a unique key, and the public URL is stored in
@@ -8,7 +8,7 @@
 //   R2_ACCOUNT_ID          - Cloudflare account ID
 //   R2_ACCESS_KEY_ID       - R2 token access key ID
 //   R2_SECRET_ACCESS_KEY   - R2 token secret
-//   R2_BUCKET_NAME         - R2 bucket name (e.g. fatami-designs)
+//   R2_BUCKET_NAME         - R2 bucket name (e.g. Futami-designs)
 //   R2_PUBLIC_URL          - Public URL of the bucket (via R2 public access
 //                            or a Cloudflare Worker / custom domain)
 //
@@ -21,7 +21,7 @@ import { getCurrentAdmin } from "@/lib/admin-auth";
 const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID;
 const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID;
 const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY;
-const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME ?? "fatami-designs";
+const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME ?? "Futami-designs";
 const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL;
 
 function hasR2Credentials(): boolean {

@@ -28,7 +28,7 @@ export function StorefrontHeader() {
       label: c.nameAr,
       action: () => openCategory(c.id),
     })),
-    { label: "عن FATAMI", action: () => setView("about") },
+    { label: "عن Futami", action: () => setView("about") },
   ];
 
   return (
@@ -106,10 +106,10 @@ export function StorefrontHeader() {
           <button
             onClick={goHome}
             className="flex flex-col items-center justify-center shrink-0"
-            aria-label="FATAMI DESIGNS"
+            aria-label="Futami DESIGNS"
           >
             <span className="text-xl sm:text-2xl font-bold tracking-luxe-wide leading-none text-charcoal">
-              FATAMI
+              Futami
             </span>
             <span className="text-[9px] sm:text-[10px] tracking-luxe-wide text-taupe mt-1">
               DESIGNS

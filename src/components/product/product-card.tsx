@@ -17,7 +17,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
   const primaryImage = product.images?.[0];
   const secondaryImage = product.images?.[1] ?? primaryImage;
   const placeholderUrl =
-    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='375'%3E%3Crect width='100%25' height='100%25' fill='%23EFE4DA'/%3E%3Ctext x='50%25' y='50%25' font-size='13' text-anchor='middle' fill='%23B39A88' font-family='sans-serif'%3EFATAMI%3C/text%3E%3C/svg%3E";
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='375'%3E%3Crect width='100%25' height='100%25' fill='%23EFE4DA'/%3E%3Ctext x='50%25' y='50%25' font-size='13' text-anchor='middle' fill='%23B39A88' font-family='sans-serif'%3EFutami%3C/text%3E%3C/svg%3E";
   const primaryUrl = primaryImage?.url ?? placeholderUrl;
   const secondaryUrl = secondaryImage?.url ?? primaryUrl;
   const primaryAlt = primaryImage?.alt ?? product.nameAr;

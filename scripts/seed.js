@@ -20,26 +20,25 @@ const IMG = {
 };
 
 async function main() {
-  console.log("Seeding FATAMI DESIGNS database...");
+  console.log("Seeding Futami DESIGNS database...");
 
   await prisma.adminUser.upsert({
-    where: { email: "admin@fatamidesigns.com" },
+    where: { email: "admin@Futamidesigns.com" },
     update: {},
     create: {
-      email: "admin@fatamidesigns.com",
+      email: "admin@Futamidesigns.com",
       name: "مدير المتجر",
       passwordHash: "$2a$10$DEMO_HASH_REPLACE_WITH_BCRYPT_IN_PRODUCTION_xxxxxxxxxxxxxxxxxxxxxxx",
       role: "ADMIN",
     },
   });
-  console.log("  - Admin user created (admin@fatamidesigns.com / admin123)");
+  console.log("  - Admin user created (admin@Futamidesigns.com / admin123)");
 
   const categoriesData = [
     { name: "Abayas", nameAr: "عبايات", slug: "abayas", image: IMG.abaya1 },
     { name: "Dresses", nameAr: "فساتين", slug: "dresses", image: IMG.dress1 },
     { name: "Kaftans", nameAr: "قفاطين", slug: "kaftans", image: IMG.kaftan1 },
     { name: "Sets", nameAr: "أطقم", slug: "sets", image: IMG.kimono1 },
-    { name: "Tops", nameAr: "بلوزات", slug: "tops", image: IMG.blouse1 },
     { name: "Bottoms", nameAr: "بناطيل", slug: "bottoms", image: IMG.trousers1 },
   ];
   const categories = {};
@@ -78,13 +77,13 @@ async function main() {
   for (const g of governorates) await prisma.governorateRate.upsert({ where: { nameAr: g.nameAr }, update: { shippingCost: g.shippingCost }, create: g });
   console.log("  - " + governorates.length + " governorates with shipping rates");
 
-  await prisma.storeSettings.upsert({ where: { id: "singleton" }, update: {}, create: { id: "singleton", brandName: "FATAMI DESIGNS", brandTagline: "أناقة بلا حدود", currency: "KWD", whatsapp: "+96590000000", instagram: "fatami.designs", tiktok: "fatamidesigns", email: "info@fatamidesigns.com", phone: "+965 9000 0000", freeShippingThreshold: 100 } });
+  await prisma.storeSettings.upsert({ where: { id: "singleton" }, update: {}, create: { id: "singleton", brandName: "Futami DESIGNS", brandTagline: "أناقة بلا حدود", currency: "KWD", whatsapp: "+96590000000", instagram: "Futami.designs", tiktok: "Futamidesigns", email: "info@Futamidesigns.com", phone: "+965 9000 0000", freeShippingThreshold: 100 } });
   console.log("  - Store settings created");
 
-  await prisma.discountCode.upsert({ where: { code: "FATAMI10" }, update: {}, create: { code: "FATAMI10", type: "PERCENTAGE", value: 10, active: true, usageLimit: 100 } });
-  console.log("  - Demo discount code: FATAMI10 (10% off)");
+  await prisma.discountCode.upsert({ where: { code: "Futami10" }, update: {}, create: { code: "Futami10", type: "PERCENTAGE", value: 10, active: true, usageLimit: 100 } });
+  console.log("  - Demo discount code: Futami10 (10% off)");
 
-  console.log("\nSeed completed! Admin login: admin@fatamidesigns.com / admin123");
+  console.log("\nSeed completed! Admin login: admin@Futamidesigns.com / admin123");
 }
 
 main().catch((e) => { console.error("Seed failed:", e); process.exit(1); }).finally(async () => { await prisma.$disconnect(); });

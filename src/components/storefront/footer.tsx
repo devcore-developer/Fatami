@@ -15,7 +15,7 @@ export function StorefrontFooter() {
           {/* Brand */}
           <div className="lg:col-span-1">
             <div className="flex flex-col mb-5">
-              <span className="text-2xl font-bold tracking-luxe-wide leading-none text-cream">FATAMI</span>
+              <span className="text-2xl font-bold tracking-luxe-wide leading-none text-cream">Futami</span>
               <span className="text-[10px] tracking-luxe-wide text-taupe mt-1.5">DESIGNS</span>
             </div>
             <p className="text-sm text-cream/55 leading-[1.8] max-w-xs font-light">
@@ -120,13 +120,11 @@ export function StorefrontFooter() {
         {/* Payment methods + copyright */}
         <div className="mt-12 pt-6 border-t border-cream/10 flex flex-col sm:flex-row items-center justify-between gap-5">
           <p className="text-xs text-cream/40 text-center sm:text-right font-light">
-            © {year} FATAMI DESIGNS — جميع الحقوق محفوظة
+            © {year} Futami DESIGNS — جميع الحقوق محفوظة
           </p>
           <div className="flex items-center gap-2">
-            <PaymentLogo label="UPayments" />
+            <PaymentLogo label="ًWamd" />
             <PaymentLogo label="KNET" />
-            <PaymentLogo label="VISA" />
-            <PaymentLogo label="Mastercard" />
           </div>
         </div>
       </div>

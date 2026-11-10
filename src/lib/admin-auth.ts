@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
 import { cookies } from "next/headers";
 import crypto from "crypto";
 
-const SESSION_COOKIE = "fatami_admin_session";
+const SESSION_COOKIE = "Futami_admin_session";
 const SESSION_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 
 // Demo password check. Replace the seeded passwordHash with a real bcrypt hash

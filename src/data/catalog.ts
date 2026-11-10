@@ -1,4 +1,4 @@
-// Mock catalog data for FATAMI DESIGNS — Phase 1 storefront
+// Mock catalog data for Futami DESIGNS — Phase 1 storefront
 // Replaced by real database data in Phase 2.
 
 import type {
@@ -291,13 +291,13 @@ export const kuwaitGovernorates: KuwaitGovernorate[] = [
 ];
 
 export const storeSettings: StoreSettings = {
-  brandName: "FATAMI DESIGNS",
+  brandName: "Futami DESIGNS",
   brandTagline: "أناقة بلا حدود",
   currency: "KWD",
   whatsapp: "+96590000000",
-  instagram: "fatami.designs",
-  tiktok: "fatamidesigns",
-  email: "info@fatamidesigns.com",
+  instagram: "Futami.designs",
+  tiktok: "Futamidesigns",
+  email: "info@Futamidesigns.com",
   phone: "+965 9000 0000",
 };
 

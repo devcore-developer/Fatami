@@ -1,4 +1,4 @@
-// UPayments integration for FATAMI DESIGNS
+// UPayments integration for Futami DESIGNS
 // Based on the standard UPayments Kuwait gateway workflow:
 //   1. Server creates a payment request via UPayments API
 //   2. Customer is redirected to the UPayments hosted checkout
@@ -100,7 +100,7 @@ export async function createPaymentRequest(orderId: string): Promise<{
     order_id: order.orderNumber,
     customer_first_name: order.customer.firstName,
     customer_last_name: order.customer.lastName,
-    customer_email: order.customer.email ?? "customer@fatamidesigns.com",
+    customer_email: order.customer.email ?? "customer@Futamidesigns.com",
     customer_mobile: order.customer.phone,
     redirect_url: `${APP_BASE_URL}/api/upayments/callback?orderNumber=${order.orderNumber}`,
     webhook_url: `${APP_BASE_URL}/api/upayments/webhook`,

@@ -1,4 +1,4 @@
-// Prisma schema for FATAMI DESIGNS
+// Prisma schema for Futami DESIGNS
 // Note: sandbox uses SQLite locally. For production (Vercel + PostgreSQL),
 // change `provider = "sqlite"` to `provider = "postgresql"` and use a
 // `postgresql://` connection string in DATABASE_URL. All field types below
@@ -153,7 +153,7 @@ model DiscountCode {
 
 model StoreSettings {
   id                    String   @id @default(cuid())
-  brandName             String   @default("FATAMI DESIGNS")
+  brandName             String   @default("Futami DESIGNS")
   brandTagline          String   @default("أناقة بلا حدود")
   currency              String   @default("KWD")
   whatsapp              String?

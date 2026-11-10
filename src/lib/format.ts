@@ -1,4 +1,4 @@
-// Formatting & currency helpers for FATAMI DESIGNS (Kuwait / KWD / Arabic)
+// Formatting & currency helpers for Futami DESIGNS (Kuwait / KWD / Arabic)
 
 export function formatPrice(amount: number, currency = "KWD"): string {
   // KWD has 3 decimal places (dinars, fils)

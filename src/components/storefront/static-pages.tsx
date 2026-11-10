@@ -54,7 +54,7 @@ function AboutPage() {
       <section className="relative h-[400px] sm:h-[480px] bg-black overflow-hidden">
         <img
           src={images.about}
-          alt="FATAMI DESIGNS"
+          alt="Futami DESIGNS"
           className="absolute inset-0 w-full h-full object-cover opacity-60"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
@@ -63,7 +63,7 @@ function AboutPage() {
             قصتنا
           </p>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white">
-            FATAMI DESIGNS
+            Futami DESIGNS
           </h1>
         </div>
       </section>
@@ -71,7 +71,7 @@ function AboutPage() {
       <div className="container-narrow py-16 sm:py-24 space-y-12">
         <div className="text-center max-w-2xl mx-auto">
           <p className="text-lg leading-relaxed text-muted-foreground">
-            FATAMI DESIGNS علامة أزياء كويتية وُلدت من شغف الأناقة والجمال.
+            Futami DESIGNS علامة أزياء كويتية وُلدت من شغف الأناقة والجمال.
             نصمم قطعاً خالدة تجمع بين الأصالة الكويتية واللمسة العصرية،
             لتمنح المرأة العصرية إطلالة فاخرة تعبّر عن شخصيتها المميزة.
           </p>
@@ -96,7 +96,7 @@ function AboutPage() {
         </div>
 
         <div className="border-t border-border pt-12">
-          <h2 className="text-2xl font-bold mb-6 text-center">لماذا FATAMI؟</h2>
+          <h2 className="text-2xl font-bold mb-6 text-center">لماذا Futami؟</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
             <Feature title="خامات فاخرة" body="نختار أجود الأقمشة لنضمن لكِ راحة وأناقة تدوم." />
             <Feature title="تصاميم حصرية" body="كل قطعة مصممة بعناية لتكون فريدة ومميزة." />
@@ -266,7 +266,7 @@ function PrivacyPage() {
   return (
     <PageShell title="سياسة الخصوصية" eyebrow="نحمي بياناتك">
       <div className="max-w-2xl mx-auto space-y-6 text-sm leading-relaxed text-muted-foreground">
-        <p>نلتزم في FATAMI DESIGNS بحماية خصوصيتك وبياناتك الشخصية. لا نشارك معلوماتك مع أي طرف ثالث دون موافقتك.</p>
+        <p>نلتزم في Futami DESIGNS بحماية خصوصيتك وبياناتك الشخصية. لا نشارك معلوماتك مع أي طرف ثالث دون موافقتك.</p>
         <InfoBlock title="البيانات التي نجمعها">
           <ul className="space-y-1.5">
             <li>• الاسم ومعلومات التواصل</li>
@@ -286,7 +286,7 @@ function TermsPage() {
   return (
     <PageShell title="الشروط والأحكام" eyebrow="باستخدامك للموقع">
       <div className="max-w-2xl mx-auto space-y-6 text-sm leading-relaxed text-muted-foreground">
-        <p>باستخدامك لموقع FATAMI DESIGNS، فإنك توافقين على الشروط والأحكام التالية:</p>
+        <p>باستخدامك لموقع Futami DESIGNS، فإنك توافقين على الشروط والأحكام التالية:</p>
         <InfoBlock title="الطلبات">
           <p>يحق لنا رفض أو إلغاء أي طلب في حال وجود خطأ في الأسعار أو توفر المنتج. سيتم إعلامك فوراً في حال إلغاء طلبك.</p>
         </InfoBlock>
@@ -294,7 +294,7 @@ function TermsPage() {
           <p>جميع الأسعار بالدينار الكويتي (د.ك). نحتفظ بحق تعديل الأسعار في أي وقت دون إشعار مسبق.</p>
         </InfoBlock>
         <InfoBlock title="الملكية الفكرية">
-          <p>جميع المحتويات والتصاميم والصور في هذا الموقع مملوكة لـ FATAMI DESIGNS ولا يجوز استخدامها دون إذن.</p>
+          <p>جميع المحتويات والتصاميم والصور في هذا الموقع مملوكة لـ Futami DESIGNS ولا يجوز استخدامها دون إذن.</p>
         </InfoBlock>
       </div>
     </PageShell>
@@ -311,7 +311,7 @@ function OrderSuccessPage({ orderNumber }: { orderNumber: string | null }) {
         </div>
         <h1 className="text-3xl font-bold mb-3">تم إنشاء طلبك بنجاح</h1>
         <p className="text-muted-foreground mb-6">
-          شكراً لتسوّقك من FATAMI DESIGNS. تم استلام طلبك وسنتواصل معك قريباً.
+          شكراً لتسوّقك من Futami DESIGNS. تم استلام طلبك وسنتواصل معك قريباً.
         </p>
         {orderNumber && (
           <div className="inline-flex items-center gap-2 px-6 py-3 border border-border mb-8">
