@@ -309,7 +309,7 @@ export async function getOrderByNumber(orderNumber: string, phone?: string) {
 
 export async function updateOrderPayment(
   orderId: string,
-  status: "PAID" | "FAILED" | "CANCELLED" | "REFUNDED",
+  status: "PAID" | "FAILED" | "CANCELLED" | "REFUNDED" | "PENDING",
   transactionId?: string,
   reference?: string
 ) {

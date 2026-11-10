@@ -118,25 +118,25 @@ export const useUI = create<UIState>((set) => ({
   isSizeChartOpen: false,
   searchQuery: "",
   lastOrderNumber: null,
-  setView: (view) =>
-    set({ view, isMenuOpen: false, isSearchOpen: false }) &&
-    typeof window !== "undefined" &&
-    window.scrollTo({ top: 0, behavior: "smooth" }),
-  openProduct: (slug) =>
-    set({ view: "product", activeProductSlug: slug }) &&
-    typeof window !== "undefined" &&
-    window.scrollTo({ top: 0, behavior: "smooth" }),
-  openCategory: (categoryId) =>
-    set({ view: "shop", activeCategoryId: categoryId }) &&
-    typeof window !== "undefined" &&
-    window.scrollTo({ top: 0, behavior: "smooth" }),
+  setView: (view) => {
+    set({ view, isMenuOpen: false, isSearchOpen: false });
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  },
+  openProduct: (slug) => {
+    set({ view: "product", activeProductSlug: slug });
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  },
+  openCategory: (categoryId) => {
+    set({ view: "shop", activeCategoryId: categoryId });
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  },
   setMenuOpen: (open) => set({ isMenuOpen: open }),
   setSearchOpen: (open) => set({ isSearchOpen: open }),
   setSizeChartOpen: (open) => set({ isSizeChartOpen: open }),
   setSearchQuery: (q) => set({ searchQuery: q }),
   setLastOrderNumber: (n) => set({ lastOrderNumber: n }),
-  goToShop: () =>
-    set({ view: "shop", activeCategoryId: null }) &&
-    typeof window !== "undefined" &&
-    window.scrollTo({ top: 0, behavior: "smooth" }),
+  goToShop: () => {
+    set({ view: "shop", activeCategoryId: null });
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  },
 }));

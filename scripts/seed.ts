@@ -43,7 +43,6 @@ async function main() {
     { name: "Dresses", nameAr: "فساتين", slug: "dresses", image: IMG.dress1 },
     { name: "Kaftans", nameAr: "قفاطين", slug: "kaftans", image: IMG.kaftan1 },
     { name: "Sets", nameAr: "أطقم", slug: "sets", image: IMG.kimono1 },
-    { name: "Tops", nameAr: "بلوزات", slug: "tops", image: IMG.blouse1 },
     { name: "Bottoms", nameAr: "بناطيل", slug: "bottoms", image: IMG.trousers1 },
   ];
   const categories: Record<string, string> = {};
@@ -101,14 +100,6 @@ async function main() {
       images: [{ url: IMG.suit1, alt: "بدلة الباور الرسمية" }, { url: IMG.suit2, alt: "بدلة الباور الرسمية - الخلف" }],
       sizes: mkSizes({ XS: 3, S: 5, M: 6, L: 4, XL: 3, XXL: 1 }),
       featured: false, newArrival: true, bestSeller: true, fabric: "صوف", care: "غسيل جاف",
-    },
-    {
-      slug: "silk-blouse-classic", name: "Silk Blouse Classic", nameAr: "بلوزة حرير كلاسيك",
-      description: "بلوزة من الحرير الفاخر بتصميم كلاسيكي خالد. قطعة أساسية في خزانة كل امرأة أنيقة. تناسب الإطلالات الرسمية واليومية.",
-      price: 45, categoryId: categories.tops,
-      images: [{ url: IMG.blouse1, alt: "بلوزة حرير كلاسيك" }, { url: IMG.blouse2, alt: "بلوزة حرير كلاسيك - جانبي" }],
-      sizes: mkSizes({ XS: 6, S: 8, M: 7, L: 5, XL: 4, XXL: 2 }),
-      featured: false, newArrival: false, bestSeller: true, fabric: "حرير طبيعي", care: "غسيل يدوي",
     },
     {
       slug: "wide-leg-trousers", name: "Wide Leg Trousers", nameAr: "بنطال واسع الساقين",

@@ -98,13 +98,6 @@ export const categories: Category[] = [
     image: IMG.collection1,
   },
   {
-    id: "cat-tops",
-    name: "Tops",
-    nameAr: "بلوزات",
-    slug: "tops",
-    image: IMG.collection2,
-  },
-  {
     id: "cat-bottoms",
     name: "Bottoms",
     nameAr: "بناطيل",
@@ -229,28 +222,6 @@ export const products: Product[] = [
     createdAt: "2026-10-25",
   },
   {
-    id: "p6",
-    slug: "silk-blouse-classic",
-    name: "Silk Blouse Classic",
-    nameAr: "بلوزة حرير كلاسيك",
-    description:
-      "بلوزة من الحرير الفاخر بتصميم كلاسيكي خالد. قطعة أساسية في خزانة كل امرأة أنيقة. تناسب الإطلالات الرسمية واليومية.",
-    price: 45,
-    categoryId: "cat-tops",
-    images: [
-      { id: "i1", url: IMG.blouse1, alt: "بلوزة حرير كلاسيك" },
-      { id: "i2", url: IMG.blouse2, alt: "بلوزة حرير كلاسيك - جانبي" },
-    ],
-    sizes: mkSizes({ XS: 6, S: 8, M: 7, L: 5, XL: 4, XXL: 2 }),
-    featured: false,
-    newArrival: false,
-    bestSeller: true,
-    active: true,
-    fabric: "حرير طبيعي",
-    care: "غسيل يدوي",
-    createdAt: "2026-08-12",
-  },
-  {
     id: "p7",
     slug: "wide-leg-trousers",
     name: "Wide Leg Trousers",
@@ -298,7 +269,7 @@ export const products: Product[] = [
 ];
 
 // Size chart data (all measurements in inches)
-export const sizeChart: SizeMeasurement & { size: SizeCode }[] = [
+export const sizeChart: { size: SizeCode; shoulder: number; chest: number; waist: number; hips: number | string }[] = [
   { size: "XS", shoulder: 13, chest: 34, waist: 26, hips: 36 },
   { size: "S", shoulder: 14, chest: 36, waist: 28, hips: 38 },
   { size: "M", shoulder: 14.5, chest: 38, waist: 30, hips: 40 },

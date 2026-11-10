@@ -41,7 +41,7 @@ export interface Product {
   newArrival: boolean;
   bestSeller: boolean;
   active: boolean;
-  trackStock: boolean;
+  trackStock?: boolean;
   fabric?: string;
   care?: string;
   createdAt: string;
