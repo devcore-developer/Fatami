@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminUploadImage } from "@/lib/r2";
 
 // POST /api/admin/upload
-// Accepts multipart/form-data with a single "file" field.
-// Returns the public URL of the uploaded image (R2 or local data URL fallback).
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
