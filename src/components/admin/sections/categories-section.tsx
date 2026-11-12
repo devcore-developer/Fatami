@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
@@ -47,7 +47,7 @@ export function CategoriesSection() {
     setLoading(true);
     try {
       const res = await fetch("/api/admin/categories");
-      const json = await res.json();
+      const json = await res.json().catch(() => ({ success: false, error: "DELETE_FAILED" }));
       if (json.success) setCategories(json.data);
     } finally {
       setLoading(false);
@@ -88,7 +88,7 @@ export function CategoriesSection() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
-    const json = await res.json();
+    const json = await res.json().catch(() => ({ success: false, error: "DELETE_FAILED" }));
     if (json.success) {
       toast({ title: editing ? "تم التحديث" : "تمت الإضافة" });
       setShowForm(false);
@@ -104,8 +104,8 @@ export function CategoriesSection() {
     // Fast path: try delete. If the category has products the API returns
     // HTTP 409 with `error: "reassign-required"` + productCount, and we open
     // the reassign dialog instead of failing flat.
-    const res = await fetch(`/api/admin/categories?id=${c.id}`, { method: "DELETE" });
-    const json = await res.json();
+    const res = await fetch(`/api/admin/categories/remove?id=${c.id}`, { method: "DELETE" });
+    const json = await res.json().catch(() => ({ success: false, error: "DELETE_FAILED" }));
     if (json.success) {
       toast({ title: "تم الحذف" });
       void load();
@@ -124,7 +124,7 @@ export function CategoriesSection() {
         `/api/admin/categories?id=${reassign.category.id}&reassignTo=${reassign.targetId}`,
         { method: "DELETE" }
       );
-      const json = await res.json();
+      const json = await res.json().catch(() => ({ success: false, error: "DELETE_FAILED" }));
       if (json.success) {
         toast({
           title: "تم الحذف",

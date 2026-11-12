@@ -7,7 +7,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ShoppingBag, Search, Menu, X } from "lucide-react";
 import { useCart, useUI } from "@/store";
 import { useCatalog } from "@/components/storefront/catalog-provider";
@@ -29,6 +29,11 @@ export function StorefrontHeader() {
   const { categories } = useCatalog();
   const count = itemCount();
   const [localQuery, setLocalQuery] = useState("");
+
+  // شارة عداد السلة بتظهر بعد أول تثبيت للصفحة في المتصفح فقط — عشان نتفادى
+  // تحذير Hydration: السلة بتتقرا من localStorage والمش متاحة للسيرفر وقت الـ SSR
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const goHome = () => setView("home");
   const goShop = () => {
@@ -169,7 +174,7 @@ export function StorefrontHeader() {
               aria-label="سلة التسوق"
             >
               <ShoppingBag className="h-5 w-5 text-charcoal" />
-              {count > 0 && (
+              {mounted && count > 0 && (
                 <span className="absolute top-0.5 left-0.5 bg-brown text-cream text-[10px] font-medium h-[18px] min-w-[18px] px-1 flex items-center justify-center rounded-full">
                   {count}
                 </span>
