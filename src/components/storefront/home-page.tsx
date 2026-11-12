@@ -8,34 +8,19 @@ import { useCatalog } from "@/components/storefront/catalog-provider";
 import { useUI } from "@/store";
 import { images } from "@/data/catalog";
 import { ArrowLeft } from "lucide-react";
-import { useEffect, useState } from "react";
 
 export function HomePage() {
-  const { products } = useCatalog();
+  const { products, storefront } = useCatalog();
   const bestSellers = products.filter((p) => p.bestSeller && p.active).slice(0, 4);
   const { setView } = useUI();
-  const [editorial, setEditorial] = useState<{
-    editorialImage?: string | null;
-    editorialTitle?: string;
-    editorialDescription?: string;
-    editorialCtaText?: string;
-  }>({});
 
-  useEffect(() => {
-    fetch("/api/storefront")
-      .then((r) => r.json())
-      .then((json) => {
-        if (json.success && json.data) {
-          setEditorial(json.data);
-        }
-      })
-      .catch(() => {});
-  }, []);
-
-  const editorialImage = editorial.editorialImage || images.hero2;
-  const editorialTitle = editorial.editorialTitle || "الأناقة الخالدة تليق بك";
-  const editorialDescription = editorial.editorialDescription || "اكتشفي مجموعتنا المميزة من التصاميم العصرية المصممة بعناية وأناقة متقنة";
-  const editorialCtaText = editorial.editorialCtaText || "تسوقي المجموعة";
+  // Editorial section uses the same server-provided storefront content
+  // (no separate fetch → no flash).
+  const c = storefront ?? {};
+  const editorialImage = c.editorialImage || images.hero2;
+  const editorialTitle = c.editorialTitle || "الأناقة الخالدة تليق بك";
+  const editorialDescription = c.editorialDescription || "اكتشفي مجموعتنا المميزة من التصاميم العصرية المصممة بعناية وأناقة متقنة";
+  const editorialCtaText = c.editorialCtaText || "تسوقي المجموعة";
 
   return (
     <div className="bg-cream">
@@ -58,7 +43,7 @@ export function HomePage() {
           <div className="relative h-[300px] sm:h-[360px] lg:h-full order-1">
             <img
               src={editorialImage}
-              alt="مجموعة Futami DESIGNS"
+              alt="مجموعة FATAMI DESIGNS"
               className="absolute inset-0 w-full h-full object-cover"
             />
           </div>
@@ -93,7 +78,7 @@ export function HomePage() {
           <div className="flex items-center justify-center gap-3 mb-4">
             <span className="h-px w-8 bg-brown/40" />
             <p className="text-xs tracking-luxe-wide text-brown font-medium">
-              انضمي إلى عائلة Futami
+              انضمي إلى عائلة FATAMI
             </p>
             <span className="h-px w-8 bg-brown/40" />
           </div>

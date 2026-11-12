@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Product, SizeCode, CustomerMeasurements } from "@/types";
+import { Product, SizeCode } from "@/types";
 import { useCart, useUI } from "@/store";
 import { formatPrice } from "@/lib/format";
 import { getProductBySlug } from "@/data/catalog";
@@ -34,8 +34,6 @@ export function ProductDetail() {
   const [activeImg, setActiveImg] = useState(0);
   const [selectedSize, setSelectedSize] = useState<SizeCode | null>(null);
   const [quantity, setQuantity] = useState(1);
-  const [showMeasurements, setShowMeasurements] = useState(false);
-  const [measurements, setMeasurements] = useState<CustomerMeasurements>({});
   const [expandedSection, setExpandedSection] = useState<string | null>("description");
 
   if (!product) {
@@ -49,9 +47,12 @@ export function ProductDetail() {
     );
   }
 
-  const availableSizes = product.sizes ?? [];
+  const trackStock = product.trackStock ?? true;
+  const availableSizes = trackStock
+    ? (product.sizes ?? []).filter((s) => s.stock > 0)
+    : (product.sizes ?? []);
   const selectedSizeObj = (product.sizes ?? []).find((s) => s.size === selectedSize);
-  const isOutOfStock = false;
+  const isOutOfStock = trackStock ? availableSizes.length === 0 : false;
   const hasDiscount = product.compareAtPrice && product.compareAtPrice > product.price;
   const productImages = product.images ?? [];
   const activeImgObj = productImages[activeImg] ?? productImages[0];
@@ -65,12 +66,7 @@ export function ProductDetail() {
       });
       return;
     }
-    const cleanedMeasurements = showMeasurements
-      ? Object.fromEntries(
-          Object.entries(measurements).filter(([, v]) => v !== "" && v !== undefined)
-        )
-      : undefined;
-    addItem(product, selectedSize, quantity, cleanedMeasurements);
+    addItem(product, selectedSize, quantity);
     toast({
       title: "تمت الإضافة بنجاح",
       description: `${product.nameAr} — مقاس ${selectedSize}`,
@@ -146,7 +142,7 @@ export function ProductDetail() {
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">
-                  Futami
+                  FATAMI
                 </div>
               )}
               {hasDiscount && (
@@ -180,21 +176,22 @@ export function ProductDetail() {
               </div>
             </div>
 
-            {/* Size selection */}
+            {/* Size selection + prominent Size Chart button */}
             <div className="mb-6">
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center justify-between mb-3 gap-3">
                 <span className="text-sm font-medium">المقاس</span>
                 <button
                   onClick={() => setSizeChartOpen(true)}
-                  className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground underline"
+                  className="inline-flex items-center gap-2 h-10 px-4 text-xs font-medium border border-foreground text-foreground hover:bg-foreground hover:text-background transition-colors rounded-full"
+                  type="button"
                 >
-                  <Ruler className="h-3.5 w-3.5" />
-                  دليل المقاسات
+                  <Ruler className="h-4 w-4" />
+                  جدول المقاسات
                 </button>
               </div>
               <div className="flex flex-wrap gap-2">
                 {(product.sizes ?? []).map((s) => {
-                  const disabled = false;
+                  const disabled = trackStock && s.stock === 0;
                   return (
                     <button
                       key={s.size}
@@ -213,70 +210,10 @@ export function ProductDetail() {
                   );
                 })}
               </div>
-            </div>
-
-            {/* Custom measurements toggle */}
-            <div className="mb-6">
-              <button
-                onClick={() => setShowMeasurements(!showMeasurements)}
-                className="flex items-center justify-between w-full py-3 border-y border-border text-sm"
-              >
-                <span className="flex items-center gap-2">
-                  <Ruler className="h-4 w-4" />
-                  إدخال قياساتي (اختياري)
-                </span>
-                <Plus className={`h-4 w-4 transition-transform ${showMeasurements ? "rotate-45" : ""}`} />
-              </button>
-              {showMeasurements && (
-                <div className="pt-4 animate-fade-up">
-                  <p className="text-xs text-muted-foreground mb-3">
-                    أدخلي قياساتك بالبوصة (inch) للحصول على قطعة بمقاس مخصص
-                  </p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    <MeasurementInput
-                      label="الكتف"
-                      value={measurements.shoulder}
-                      onChange={(v) =>
-                        setMeasurements((m) => ({ ...m, shoulder: v }))
-                      }
-                    />
-                    <MeasurementInput
-                      label="الصدر"
-                      value={measurements.chest}
-                      onChange={(v) =>
-                        setMeasurements((m) => ({ ...m, chest: v }))
-                      }
-                    />
-                    <MeasurementInput
-                      label="الخصر"
-                      value={measurements.waist}
-                      onChange={(v) =>
-                        setMeasurements((m) => ({ ...m, waist: v }))
-                      }
-                    />
-                    <MeasurementInput
-                      label="الأرداف"
-                      value={measurements.hips}
-                      onChange={(v) =>
-                        setMeasurements((m) => ({ ...m, hips: v }))
-                      }
-                    />
-                    <MeasurementInput
-                      label="طول الكم"
-                      value={measurements.sleeveLength}
-                      onChange={(v) =>
-                        setMeasurements((m) => ({ ...m, sleeveLength: v }))
-                      }
-                    />
-                    <MeasurementInput
-                      label="الطول"
-                      value={measurements.height}
-                      onChange={(v) =>
-                        setMeasurements((m) => ({ ...m, height: v }))
-                      }
-                    />
-                  </div>
-                </div>
+              {trackStock && selectedSizeObj && selectedSizeObj.stock <= 3 && selectedSizeObj.stock > 0 && (
+                <p className="text-xs text-foreground mt-2">
+                  بقي {selectedSizeObj.stock} قطع فقط — سارعي بالطلب
+                </p>
               )}
             </div>
 
@@ -334,7 +271,7 @@ export function ProductDetail() {
             <div className="grid grid-cols-3 gap-2 mb-8 text-center">
               <Trust icon={<Truck className="h-5 w-5" />} title="شحن سريع" subtitle="1-3 أيام" />
               <Trust icon={<RefreshCcw className="h-5 w-5" />} title="إرجاع مجاني" subtitle="خلال 7 أيام" />
-              <Trust icon={<Shield className="h-5 w-5" />} title="دفع آمن" subtitle="UPayments" />
+              <Trust icon={<Shield className="h-5 w-5" />} title="دفع آمن" subtitle="WAMD / بنكي" />
             </div>
 
             {/* Accordion */}
@@ -387,8 +324,8 @@ export function ProductDetail() {
               >
                 <ul className="text-sm text-muted-foreground space-y-2">
                   <li>• الشحن داخل الكويت خلال 1-3 أيام عمل</li>
-                  <li>• رسوم الشحن: 3 د.ك لمعظم المحافظات، 5 د.ك للمطلاع وصباح الأحمد</li>
-                  <li>• الدفع عند الاستلام متاح</li>
+                  <li>• رسوم الشحن حسب منطقة التوصيل (تُحدّد عند الدفع)</li>
+                  <li>• الدفع عبر WAMD أو تحويل بنكي</li>
                   <li>• إرجاع واستبدال مجاني خلال 7 أيام</li>
                 </ul>
               </Accordion>
@@ -396,33 +333,6 @@ export function ProductDetail() {
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-function MeasurementInput({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value?: number;
-  onChange: (v: number | undefined) => void;
-}) {
-  return (
-    <div>
-      <label className="text-xs text-muted-foreground block mb-1">{label}</label>
-      <input
-        type="number"
-        step="0.5"
-        min={0}
-        value={value ?? ""}
-        onChange={(e) =>
-          onChange(e.target.value === "" ? undefined : Number(e.target.value))
-        }
-        placeholder="بوصة"
-        className="w-full h-10 px-3 text-sm bg-secondary border-0 focus:ring-1 focus:ring-ring outline-none"
-      />
     </div>
   );
 }

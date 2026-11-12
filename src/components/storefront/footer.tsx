@@ -2,10 +2,12 @@
 
 import { Instagram, Mail, Phone, MapPin } from "lucide-react";
 import { useUI } from "@/store";
-import { categories, storeSettings } from "@/data/catalog";
+import { storeSettings } from "@/data/catalog";
+import { useCatalog } from "@/components/storefront/catalog-provider";
 
 export function StorefrontFooter() {
   const { setView, openCategory } = useUI();
+  const { categories } = useCatalog();
   const year = new Date().getFullYear();
 
   return (
@@ -15,7 +17,7 @@ export function StorefrontFooter() {
           {/* Brand */}
           <div className="lg:col-span-1">
             <div className="flex flex-col mb-5">
-              <span className="text-2xl font-bold tracking-luxe-wide leading-none text-cream">Futami</span>
+              <span className="text-2xl font-bold tracking-luxe-wide leading-none text-cream">FATAMI</span>
               <span className="text-[10px] tracking-luxe-wide text-taupe mt-1.5">DESIGNS</span>
             </div>
             <p className="text-sm text-cream/55 leading-[1.8] max-w-xs font-light">
@@ -26,11 +28,16 @@ export function StorefrontFooter() {
 
           {/* Quick navigation */}
           <div>
-            <h4 className="text-xs tracking-luxe text-taupe mb-5 font-medium">تسوقي</h4>
+            <h4 className="text-xs tracking-luxe text-taupe mb-5 font-medium">
+              تسوقي
+            </h4>
             <ul className="space-y-3 text-sm">
               <li>
                 <button
-                  onClick={() => { useUI.setState({ activeCategoryId: null }); setView("shop"); }}
+                  onClick={() => {
+                    useUI.setState({ activeCategoryId: null });
+                    setView("shop");
+                  }}
                   className="text-cream/70 hover:text-cream transition-colors"
                 >
                   جميع المنتجات
@@ -51,7 +58,9 @@ export function StorefrontFooter() {
 
           {/* Customer service */}
           <div>
-            <h4 className="text-xs tracking-luxe text-taupe mb-5 font-medium">خدمة العملاء</h4>
+            <h4 className="text-xs tracking-luxe text-taupe mb-5 font-medium">
+              خدمة العملاء
+            </h4>
             <ul className="space-y-3 text-sm">
               <li><FooterLink onClick={() => setView("size-guide")}>دليل المقاسات</FooterLink></li>
               <li><FooterLink onClick={() => setView("shipping-info")}>الشحن والتوصيل</FooterLink></li>
@@ -63,54 +72,41 @@ export function StorefrontFooter() {
             </ul>
           </div>
 
-          {/* Contact — fixed icon column for consistent alignment */}
+          {/* Contact */}
           <div>
-            <h4 className="text-xs tracking-luxe text-taupe mb-5 font-medium">تواصل</h4>
-            <ul className="space-y-4 text-sm">
-              {/* Location */}
-              <li className="flex items-center gap-3">
-                <span className="flex items-center justify-center w-5 h-5 shrink-0">
-                  <MapPin className="h-4 w-4 text-taupe" />
-                </span>
-                <span className="text-cream/70">الكويت</span>
+            <h4 className="text-xs tracking-luxe text-taupe mb-5 font-medium">
+              تواصل
+            </h4>
+            <ul className="space-y-3.5 text-sm">
+              <li className="flex items-center gap-2.5 text-cream/70">
+                <MapPin className="h-4 w-4 shrink-0 text-taupe" />
+                <span>الكويت</span>
               </li>
-              {/* Phone */}
-              <li className="flex items-center gap-3">
-                <span className="flex items-center justify-center w-5 h-5 shrink-0">
-                  <Phone className="h-4 w-4 text-taupe" />
-                </span>
+              <li>
                 <a
                   href={`https://wa.me/${storeSettings.whatsapp?.replace(/\D/g, "")}`}
-                  className="text-cream/70 hover:text-cream transition-colors"
+                  className="flex items-center gap-2.5 text-cream/70 hover:text-cream transition-colors"
                   dir="ltr"
                 >
-                  {storeSettings.phone}
+                  <Phone className="h-4 w-4 shrink-0 text-taupe" /> {storeSettings.phone}
                 </a>
               </li>
-              {/* Email */}
-              <li className="flex items-center gap-3">
-                <span className="flex items-center justify-center w-5 h-5 shrink-0">
-                  <Mail className="h-4 w-4 text-taupe" />
-                </span>
+              <li>
                 <a
                   href={`mailto:${storeSettings.email}`}
-                  className="text-cream/70 hover:text-cream transition-colors"
+                  className="flex items-center gap-2.5 text-cream/70 hover:text-cream transition-colors"
                   dir="ltr"
                 >
-                  {storeSettings.email}
+                  <Mail className="h-4 w-4 shrink-0 text-taupe" /> {storeSettings.email}
                 </a>
               </li>
-              {/* Instagram */}
-              <li className="flex items-center gap-3">
-                <span className="flex items-center justify-center w-5 h-5 shrink-0">
-                  <Instagram className="h-4 w-4 text-taupe" />
-                </span>
+              <li>
                 <a
                   href={`https://instagram.com/${storeSettings.instagram}`}
-                  className="text-cream/70 hover:text-cream transition-colors"
+                  className="flex items-center gap-2.5 text-cream/70 hover:text-cream transition-colors"
                   dir="ltr"
                 >
-                  @{storeSettings.instagram}
+                  <Instagram className="h-4 w-4 shrink-0 text-taupe" /> @{storeSettings.instagram}
                 </a>
               </li>
             </ul>
@@ -118,13 +114,14 @@ export function StorefrontFooter() {
         </div>
 
         {/* Payment methods + copyright */}
-        <div className="mt-12 pt-6 border-t border-cream/10 flex flex-col sm:flex-row items-center justify-between gap-5">
+        <div className="mt-12 pt-6 border-t border-cream/10 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-cream/40 text-center sm:text-right font-light">
-            © {year} Futami DESIGNS — جميع الحقوق محفوظة
+            © {year} FATAMI DESIGNS — جميع الحقوق محفوظة
           </p>
-          <div className="flex items-center gap-2">
-            <PaymentLogo label="ًWamd" />
-            <PaymentLogo label="KNET" />
+          <div className="flex items-center gap-2.5 text-xs text-cream/40">
+            <span className="hidden sm:inline">طرق الدفع</span>
+            <PaymentBadge label="WAMD" />
+            <PaymentBadge label="تحويل بنكي" />
           </div>
         </div>
       </div>
@@ -132,9 +129,9 @@ export function StorefrontFooter() {
   );
 }
 
-function PaymentLogo({ label }: { label: string }) {
+function PaymentBadge({ label }: { label: string }) {
   return (
-    <span className="inline-flex items-center justify-center h-7 px-2.5 bg-cream/10 border border-cream/15 rounded text-[9px] font-bold text-cream/70 uppercase tracking-wide hover:bg-cream/15 transition-colors">
+    <span className="px-2.5 py-1 border border-cream/20 text-[10px] font-medium text-cream/60 rounded-full">
       {label}
     </span>
   );

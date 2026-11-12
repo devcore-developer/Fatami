@@ -8,12 +8,13 @@ import { useToast } from "@/hooks/use-toast";
 
 export function SettingsSection() {
   const [settings, setSettings] = useState<any>({
-    brandName: "Futami DESIGNS",
+    brandName: "FATAMI DESIGNS",
     brandTagline: "أناقة بلا حدود",
     currency: "KWD",
     whatsapp: "",
     instagram: "",
     tiktok: "",
+    snapchat: "",
     email: "",
     phone: "",
     freeShippingThreshold: 100,
@@ -21,6 +22,8 @@ export function SettingsSection() {
     bankAccount: "",
     accountName: "",
     iban: "",
+    wamdPhone: "",
+    wamdAccountName: "",
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -102,6 +105,19 @@ export function SettingsSection() {
           <Field label="تيك توك">
             <Input value={settings.tiktok ?? ""} onChange={(e) => setSettings({ ...settings, tiktok: e.target.value })} className="h-10" dir="ltr" />
           </Field>
+          <Field label="سناب شات">
+            <Input value={settings.snapchat ?? ""} onChange={(e) => setSettings({ ...settings, snapchat: e.target.value })} className="h-10" dir="ltr" placeholder="username (بدون @)" />
+          </Field>
+        </div>
+
+        <h3 className="text-xs tracking-luxe uppercase text-muted-foreground pt-4 border-t border-border">بيانات WAMD (وامض)</h3>
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="رقم هاتف WAMD">
+            <Input value={settings.wamdPhone ?? ""} onChange={(e) => setSettings({ ...settings, wamdPhone: e.target.value })} className="h-10" dir="ltr" placeholder="+965 9000 0000" />
+          </Field>
+          <Field label="اسم حساب WAMD (اختياري)">
+            <Input value={settings.wamdAccountName ?? ""} onChange={(e) => setSettings({ ...settings, wamdAccountName: e.target.value })} className="h-10" />
+          </Field>
         </div>
 
         <h3 className="text-xs tracking-luxe uppercase text-muted-foreground pt-4 border-t border-border">بيانات التحويل البنكي</h3>
@@ -119,6 +135,7 @@ export function SettingsSection() {
             <Input value={settings.iban ?? ""} onChange={(e) => setSettings({ ...settings, iban: e.target.value })} className="h-10" dir="ltr" />
           </Field>
         </div>
+
         <div className="flex justify-end pt-4 border-t border-border">
           <Button onClick={save} disabled={saving}>
             {saving ? "جاري الحفظ..." : "حفظ الإعدادات"}

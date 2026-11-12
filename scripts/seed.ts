@@ -1,4 +1,4 @@
-// Database seed script for Futami DESIGNS
+// Database seed script for FATAMI DESIGNS
 // Run with: bun run scripts/seed.ts
 
 import { PrismaClient } from "@prisma/client";
@@ -24,19 +24,19 @@ const IMG = {
 };
 
 async function main() {
-  console.log("🌱 Seeding Futami DESIGNS database...");
+  console.log("🌱 Seeding FATAMI DESIGNS database...");
 
   await prisma.adminUser.upsert({
-    where: { email: "admin@Futamidesigns.com" },
+    where: { email: "admin@fatamidesigns.com" },
     update: {},
     create: {
-      email: "admin@Futamidesigns.com",
+      email: "admin@fatamidesigns.com",
       name: "مدير المتجر",
       passwordHash: "$2a$10$DEMO_HASH_REPLACE_WITH_BCRYPT_IN_PRODUCTION_xxxxxxxxxxxxxxxxxxxxxxx",
       role: "ADMIN",
     },
   });
-  console.log("  ✓ Admin user created (admin@Futamidesigns.com)");
+  console.log("  ✓ Admin user created (admin@fatamidesigns.com)");
 
   const categoriesData = [
     { name: "Abayas", nameAr: "عبايات", slug: "abayas", image: IMG.abaya1 },
@@ -159,25 +159,32 @@ async function main() {
     update: {},
     create: {
       id: "singleton",
-      brandName: "Futami DESIGNS",
+      brandName: "FATAMI DESIGNS",
       brandTagline: "أناقة بلا حدود",
       currency: "KWD",
       whatsapp: "+96590000000",
-      instagram: "Futami.designs",
-      tiktok: "Futamidesigns",
-      email: "info@Futamidesigns.com",
+      instagram: "fatami.designs",
+      tiktok: "fatamidesigns",
+      snapchat: "fatamidesigns",
+      email: "info@fatamidesigns.com",
       phone: "+965 9000 0000",
       freeShippingThreshold: 100,
+      bankName: "بنك الكويت الوطني",
+      bankAccount: "01234567890",
+      accountName: "FATAMI DESIGNS",
+      iban: "KW01 NBOK 0000 0000 0123 4567 89",
+      wamdPhone: "+96590000000",
+      wamdAccountName: "FATAMI DESIGNS",
     },
   });
   console.log("  ✓ Store settings created");
 
   await prisma.discountCode.upsert({
-    where: { code: "Futami10" },
+    where: { code: "FATAMI10" },
     update: {},
-    create: { code: "Futami10", type: "PERCENTAGE", value: 10, active: true, usageLimit: 100 },
+    create: { code: "FATAMI10", type: "PERCENTAGE", value: 10, active: true, usageLimit: 100 },
   });
-  console.log("  ✓ Demo discount code: Futami10 (10% off)");
+  console.log("  ✓ Demo discount code: FATAMI10 (10% off)");
 
   console.log("\n✅ Seed completed successfully");
 }

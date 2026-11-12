@@ -21,6 +21,7 @@ export function StorefrontHeader() {
     setView("shop");
   };
 
+  // Build nav from actual categories — الرئيسية, جميع المنتجات, then categories, then عن FATAMI
   const navItems = [
     { label: "الرئيسية", action: goHome },
     { label: "جميع المنتجات", action: goShop },
@@ -28,12 +29,13 @@ export function StorefrontHeader() {
       label: c.nameAr,
       action: () => openCategory(c.id),
     })),
-    { label: "عن Futami", action: () => setView("about") },
+    { label: "عن FATAMI", action: () => setView("about") },
   ];
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-hairline bg-cream">
       <div className="container-luxe">
+        {/* Main header row */}
         <div className="flex h-16 sm:h-20 items-center justify-between gap-4">
           {/* Right (RTL): menu */}
           <div className="flex items-center flex-1">
@@ -64,7 +66,7 @@ export function StorefrontHeader() {
                       التشكيلات
                     </p>
                   </div>
-                  {categories.filter((c) => c.slug !== "bottoms" && c.slug !== "tops").map((c) => (
+                  {categories.map((c) => (
                     <MenuLink
                       key={c.id}
                       onClick={() => {
@@ -89,7 +91,9 @@ export function StorefrontHeader() {
                   <MenuLink onClick={() => { setView("returns"); setMenuOpen(false); }}>
                     الإرجاع والاستبدال
                   </MenuLink>
-
+                  <MenuLink onClick={() => { setView("order-tracking"); setMenuOpen(false); }}>
+                    تتبع الطلب
+                  </MenuLink>
                 </nav>
                 <div className="px-6 py-5 border-t border-hairline mt-2">
                   <p className="text-[10px] text-muted-brand mb-2.5 tracking-luxe uppercase">
@@ -106,13 +110,18 @@ export function StorefrontHeader() {
           <button
             onClick={goHome}
             className="flex flex-col items-center justify-center shrink-0"
-            aria-label="Futami DESIGNS"
+            aria-label="FATAMI DESIGNS"
           >
             <span className="text-xl sm:text-2xl font-bold tracking-luxe-wide leading-none text-charcoal">
-              Futami
+              FATAMI
             </span>
             <span className="text-[9px] sm:text-[10px] tracking-luxe-wide text-taupe mt-1">
               DESIGNS
+            </span>
+            {/* Mobile-only tagline — "صنع في الكويت". Hidden on desktop so
+                the desktop header layout/spacing is not changed. */}
+            <span className="lg:hidden text-[8px] tracking-normal text-brown/70 mt-1.5 font-medium">
+              صنع في الكويت
             </span>
           </button>
 

@@ -13,8 +13,6 @@ const IMG = {
   kimono2: "https://images.unsplash.com/photo-1606293459339-aa5d34a7b0e1?auto=format&fit=crop&w=900&q=80",
   suit1: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=900&q=80",
   suit2: "https://images.unsplash.com/photo-1551803091-e20673f15770?auto=format&fit=crop&w=900&q=80",
-  blouse1: "https://images.unsplash.com/photo-1564257631407-4deb1f99d992?auto=format&fit=crop&w=900&q=80",
-  blouse2: "https://images.unsplash.com/photo-1581044777550-4cfa60706c55?auto=format&fit=crop&w=900&q=80",
   trousers1: "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&fit=crop&w=900&q=80",
   trousers2: "https://images.unsplash.com/photo-1614179086353-cb8a7c4c4c8a?auto=format&fit=crop&w=900&q=80",
 };
@@ -57,7 +55,6 @@ async function main() {
     { slug: "onyx-kaftan", name: "Onyx Kaftan", nameAr: "قفطان أونيكس", description: "قفطان فاخر بتصميم عصري مزين بتفاصيل أنيقة. مثالي للمناسبات الرسمية والسهرات.", price: 92, compareAtPrice: 110, categoryId: categories.kaftans, images: [{ url: IMG.kaftan1, alt: "قفطان أونيكس" }, { url: IMG.kaftan2, alt: "قفطان أونيكس - تفاصيل" }], sizes: mkSizes({ XS: 4, S: 5, M: 6, L: 4, XL: 3, XXL: 2 }), featured: true, newArrival: false, bestSeller: true, fabric: "كريب", care: "غسيل جاف" },
     { slug: "monochrome-kimono-set", name: "Monochrome Kimono Set", nameAr: "طقم الكيمونو مونوكروم", description: "طقم كيمونو عصري بتصميم مزدوج اللون. إطلالة متكاملة بأناقة عصرية.", price: 110, categoryId: categories.sets, images: [{ url: IMG.kimono1, alt: "طقم الكيمونو مونوكروم" }, { url: IMG.kimono2, alt: "طقم الكيمونو مونوكروم - تفاصيل" }], sizes: mkSizes({ XS: 2, S: 4, M: 5, L: 3, XL: 2 }), featured: true, newArrival: true, bestSeller: true, fabric: "كتان و حرير", care: "غسيل لطيف" },
     { slug: "tailored-power-suit", name: "Tailored Power Suit", nameAr: "بدلة الباور الرسمية", description: "بدلة رسمية بقصّة محكمة تمنحك حضوراً قوياً واثقاً.", price: 135, compareAtPrice: 160, categoryId: categories.sets, images: [{ url: IMG.suit1, alt: "بدلة الباور الرسمية" }, { url: IMG.suit2, alt: "بدلة الباور الرسمية - الخلف" }], sizes: mkSizes({ XS: 3, S: 5, M: 6, L: 4, XL: 3, XXL: 1 }), featured: false, newArrival: true, bestSeller: true, fabric: "صوف", care: "غسيل جاف" },
-    { slug: "silk-blouse-classic", name: "Silk Blouse Classic", nameAr: "بلوزة حرير كلاسيك", description: "بلوزة من الحرير الفاخر بتصميم كلاسيكي خالد. قطعة أساسية في خزانة كل امرأة أنيقة.", price: 45, categoryId: categories.tops, images: [{ url: IMG.blouse1, alt: "بلوزة حرير كلاسيك" }, { url: IMG.blouse2, alt: "بلوزة حرير كلاسيك - جانبي" }], sizes: mkSizes({ XS: 6, S: 8, M: 7, L: 5, XL: 4, XXL: 2 }), featured: false, newArrival: false, bestSeller: true, fabric: "حرير طبيعي", care: "غسيل يدوي" },
     { slug: "wide-leg-trousers", name: "Wide Leg Trousers", nameAr: "بنطال واسع الساقين", description: "بنطال واسع الساقين بقصّة عصرية مريحة. خامة عالية الجودة تسقط بشكل أنيق.", price: 52, categoryId: categories.bottoms, images: [{ url: IMG.trousers1, alt: "بنطال واسع الساقين" }, { url: IMG.trousers2, alt: "بنطال واسع الساقين - تفاصيل" }], sizes: mkSizes({ XS: 4, S: 6, M: 8, L: 5, XL: 3, XXL: 2 }), featured: false, newArrival: true, bestSeller: false, fabric: "بوليستر منسوج", care: "غسيل آلي بماء بارد" },
     { slug: "ivory-cape-abaya", name: "Ivory Cape Abaya", nameAr: "عباية الكيب عاجي", description: "عباية بتصميم الكيب الفاخر بلون عاجي راقٍ. تتميز بتفاصيل استثنائية وقصّة انسيابية.", price: 98, compareAtPrice: 120, categoryId: categories.abayas, images: [{ url: IMG.abaya2, alt: "عباية الكيب عاجي" }, { url: IMG.abaya1, alt: "عباية الكيب عاجي - الخلف" }], sizes: mkSizes({ XS: 2, S: 4, M: 5, L: 4, XL: 2, XXL: 0 }), featured: true, newArrival: false, bestSeller: true, fabric: "كريب فاخر", care: "غسيل جاف" },
   ];
@@ -82,6 +79,9 @@ async function main() {
 
   await prisma.discountCode.upsert({ where: { code: "Futami10" }, update: {}, create: { code: "Futami10", type: "PERCENTAGE", value: 10, active: true, usageLimit: 100 } });
   console.log("  - Demo discount code: Futami10 (10% off)");
+
+  await prisma.storefrontContent.upsert({ where: { id: "singleton" }, update: {}, create: { id: "singleton" } });
+  console.log("  - Storefront content created");
 
   console.log("\nSeed completed! Admin login: admin@Futamidesigns.com / admin123");
 }

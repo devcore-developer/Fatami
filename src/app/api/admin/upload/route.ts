@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminUploadImage } from "@/lib/r2";
 
-// POST /api/admin/upload
+// POST /api/admin/upload — admin-protected image upload (R2).
+// Used by the storefront-content and product editors to upload hero images
+// and product imagery. Falls back to a data URL when R2 credentials are
+// not configured (local/dev), so the admin UI remains usable.
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
@@ -12,7 +15,9 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-    const result = await adminUploadImage(file, "products");
+    // Default folder is "products"; storefront editors pass "storefront".
+    const folder = (formData.get("folder") as string) || "products";
+    const result = await adminUploadImage(file, folder);
     if (!result.success) {
       return NextResponse.json(
         { success: false, error: result.error },
@@ -22,7 +27,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       data: { url: result.url, key: result.key },
-      warning: result.error === "R2_CREDENTIALS_MISSING" ? "R2 credentials not set — stored as data URL for testing" : undefined,
     });
   } catch (e: any) {
     return NextResponse.json(

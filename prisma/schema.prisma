@@ -1,8 +1,8 @@
-// Prisma schema for Futami DESIGNS
+// Prisma schema for FATAMI DESIGNS
 // Note: sandbox uses SQLite locally. For production (Vercel + PostgreSQL),
 // change `provider = "sqlite"` to `provider = "postgresql"` and use a
 // `postgresql://` connection string in DATABASE_URL. All field types below
-// are PostgreSQL-compatible.
+// are PostgreSQL-compatible (String/Int/Boolean/DateTime/Json).
 
 generator client {
   provider = "prisma-client-js"
@@ -18,7 +18,7 @@ model AdminUser {
   email        String   @unique
   name         String
   passwordHash String
-  role         String   @default("ADMIN")
+  role         String   @default("ADMIN") // ADMIN | EDITOR
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
@@ -29,6 +29,8 @@ model Category {
   nameAr      String
   slug        String    @unique
   image       String?
+  active      Boolean   @default(true)
+  sortOrder   Int       @default(0)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   products    Product[]
@@ -71,7 +73,7 @@ model ProductSize {
   id        String  @id @default(cuid())
   productId String
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  size      String
+  size      String  // XS | S | M | L | XL | XXL
   stock     Int     @default(0)
 }
 
@@ -141,7 +143,7 @@ model GovernorateRate {
 model DiscountCode {
   id         String    @id @default(cuid())
   code       String    @unique
-  type       String
+  type       String    // PERCENTAGE | FIXED
   value      Float
   active     Boolean   @default(true)
   usageLimit Int?
@@ -153,12 +155,13 @@ model DiscountCode {
 
 model StoreSettings {
   id                    String   @id @default(cuid())
-  brandName             String   @default("Futami DESIGNS")
+  brandName             String   @default("FATAMI DESIGNS")
   brandTagline          String   @default("أناقة بلا حدود")
   currency              String   @default("KWD")
   whatsapp              String?
   instagram             String?
   tiktok                String?
+  snapchat              String?
   email                 String?
   phone                 String?
   freeShippingThreshold Float?
@@ -166,6 +169,8 @@ model StoreSettings {
   bankAccount           String?
   accountName           String?
   iban                  String?
+  wamdPhone             String?
+  wamdAccountName       String?
   updatedAt             DateTime @updatedAt
 }
 

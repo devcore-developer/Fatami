@@ -82,12 +82,6 @@ export function CartDrawer() {
                     <p className="text-xs text-muted-foreground mt-1">
                       المقاس: {item.size}
                     </p>
-                    {item.measurements &&
-                      Object.keys(item.measurements).length > 0 && (
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          مع قياسات مخصصة
-                        </p>
-                      )}
                     <div className="flex items-center justify-between mt-3">
                       <div className="inline-flex items-center border border-border">
                         <button

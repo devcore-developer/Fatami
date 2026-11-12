@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useCart, useUI } from "@/store";
 import { formatPrice } from "@/lib/format";
 import { storeSettings } from "@/data/catalog";
@@ -16,9 +16,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Check, Upload, Building2, Copy } from "lucide-react";
+import { ArrowLeft, Check, Upload, Building2, Copy, Smartphone } from "lucide-react";
 
 type Step = "info" | "payment";
+type PaymentMethod = "WAMD" | "BANK_TRANSFER";
 
 export function CheckoutView() {
   const { items, subtotal, clear } = useCart();
@@ -28,6 +29,9 @@ export function CheckoutView() {
   const total = subtotal();
 
   const [step, setStep] = useState<Step>("info");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("WAMD");
+  // Live store settings (WAMD phone etc.) fetched from the admin-configured DB record.
+  const [settings, setSettings] = useState<any>(storeSettings);
   const [form, setForm] = useState({
     emailOrPhone: "",
     firstName: "",
@@ -44,6 +48,16 @@ export function CheckoutView() {
   const [processing, setProcessing] = useState(false);
   const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+
+  // Fetch the admin-configured store settings (bank + WAMD details) once.
+  useEffect(() => {
+    fetch("/api/admin/settings", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.success && json.data) setSettings({ ...storeSettings, ...json.data });
+      })
+      .catch(() => {});
+  }, []);
 
   const selectedGov = governorates.find(
     (g) => g.nameAr === form.governorate
@@ -99,6 +113,7 @@ export function CheckoutView() {
     const fd = new FormData();
     fd.append("file", file);
     try {
+      // Public upload endpoint (no admin auth required for customer receipts).
       const res = await fetch("/api/upload", { method: "POST", body: fd });
       const json = await res.json();
       if (json.success) {
@@ -135,9 +150,8 @@ export function CheckoutView() {
           productId: i.productId,
           size: i.size,
           quantity: i.quantity,
-          measurements: i.measurements,
         })),
-        paymentMethod: "BANK_TRANSFER",
+        paymentMethod,
         transferScreenshot: screenshotUrl,
       };
 
@@ -288,30 +302,78 @@ export function CheckoutView() {
 
             {step === "payment" && (
               <div className="space-y-6 animate-fade-up">
-                <SectionTitle title="طريقة الدفع: تحويل بنكي" />
+                <SectionTitle title="طريقة الدفع" />
+
+                {/* Payment method selection — only WAMD and Bank Transfer */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <PaymentOption
+                    selected={paymentMethod === "WAMD"}
+                    onClick={() => setPaymentMethod("WAMD")}
+                    icon={<Smartphone className="h-5 w-5" />}
+                    title="WAMD (وامض)"
+                    subtitle="تحويل فوري عبر وامض"
+                  />
+                  <PaymentOption
+                    selected={paymentMethod === "BANK_TRANSFER"}
+                    onClick={() => setPaymentMethod("BANK_TRANSFER")}
+                    icon={<Building2 className="h-5 w-5" />}
+                    title="تحويل بنكي"
+                    subtitle="حوّلي إلى الحساب البنكي"
+                  />
+                </div>
+
+                {/* WAMD details */}
+                {paymentMethod === "WAMD" && (
+                  <div className="border border-hairline rounded-2xl bg-surface p-6 space-y-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Smartphone className="h-5 w-5 text-brown" />
+                      <h3 className="text-sm font-bold text-charcoal">بيانات الدفع عبر WAMD</h3>
+                    </div>
+                    <div className="space-y-3">
+                      {settings.wamdPhone && (
+                        <BankRow label="رقم الهاتف (WAMD)" value={settings.wamdPhone} onCopy={copyToClipboard} ltr />
+                      )}
+                      {settings.wamdAccountName && (
+                        <BankRow label="اسم الحساب" value={settings.wamdAccountName} onCopy={copyToClipboard} />
+                      )}
+                      {!settings.wamdPhone && !settings.wamdAccountName && (
+                        <p className="text-xs text-muted-brand">
+                          لم يتم ضبط بيانات WAMD بعد. تواصلي مع المتجر لتأكيد التحويل.
+                        </p>
+                      )}
+                    </div>
+                    <div className="pt-3 border-t border-hairline">
+                      <p className="text-xs text-muted-brand leading-relaxed">
+                        حوّلي المبلغ المطلوب ({formatPrice(grandTotal)}) إلى رقم WAMD أعلاه، ثم ارفعي صورة إيصال التحويل أدناه لتأكيد الطلب.
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {/* Bank transfer details */}
-                <div className="border border-hairline rounded-2xl bg-surface p-6 space-y-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Building2 className="h-5 w-5 text-brown" />
-                    <h3 className="text-sm font-bold text-charcoal">بيانات التحويل</h3>
-                  </div>
+                {paymentMethod === "BANK_TRANSFER" && (
+                  <div className="border border-hairline rounded-2xl bg-surface p-6 space-y-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Building2 className="h-5 w-5 text-brown" />
+                      <h3 className="text-sm font-bold text-charcoal">بيانات التحويل البنكي</h3>
+                    </div>
 
-                  <div className="space-y-3">
-                    <BankRow label="اسم البنك" value={storeSettings.bankName || "—"} onCopy={copyToClipboard} />
-                    <BankRow label="اسم صاحب الحساب" value={storeSettings.accountName || "—"} onCopy={copyToClipboard} />
-                    <BankRow label="رقم الحساب" value={storeSettings.bankAccount || "—"} onCopy={copyToClipboard} />
-                    {storeSettings.iban && (
-                      <BankRow label="IBAN" value={storeSettings.iban} onCopy={copyToClipboard} />
-                    )}
-                  </div>
+                    <div className="space-y-3">
+                      <BankRow label="اسم البنك" value={settings.bankName || "—"} onCopy={copyToClipboard} />
+                      <BankRow label="اسم صاحب الحساب" value={settings.accountName || "—"} onCopy={copyToClipboard} />
+                      <BankRow label="رقم الحساب" value={settings.bankAccount || "—"} onCopy={copyToClipboard} ltr />
+                      {settings.iban && (
+                        <BankRow label="IBAN" value={settings.iban} onCopy={copyToClipboard} ltr />
+                      )}
+                    </div>
 
-                  <div className="pt-3 border-t border-hairline">
-                    <p className="text-xs text-muted-brand leading-relaxed">
-                      حوّلي المبلغ المطلوب ({formatPrice(grandTotal)}) إلى الحساب أعلاه، ثم ارفعي صورة إيصال التحويل أدناه لتأكيد الطلب.
-                    </p>
+                    <div className="pt-3 border-t border-hairline">
+                      <p className="text-xs text-muted-brand leading-relaxed">
+                        حوّلي المبلغ المطلوب ({formatPrice(grandTotal)}) إلى الحساب أعلاه، ثم ارفعي صورة إيصال التحويل أدناه لتأكيد الطلب.
+                      </p>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Screenshot upload */}
                 <div className="border border-hairline rounded-2xl bg-surface p-6 space-y-4">
@@ -426,6 +488,41 @@ export function CheckoutView() {
   );
 }
 
+function PaymentOption({
+  selected,
+  onClick,
+  icon,
+  title,
+  subtitle,
+}: {
+  selected: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
+  title: string;
+  subtitle: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex items-start gap-3 p-4 border rounded-2xl text-right transition-all ${
+        selected
+          ? "border-charcoal bg-charcoal/5 ring-1 ring-charcoal"
+          : "border-hairline bg-surface hover:border-brown"
+      }`}
+    >
+      <span className={`inline-flex h-10 w-10 items-center justify-center rounded-full ${selected ? "bg-charcoal text-cream" : "bg-beige text-brown"}`}>
+        {icon}
+      </span>
+      <div className="flex-1">
+        <p className="text-sm font-bold text-charcoal">{title}</p>
+        <p className="text-xs text-muted-brand mt-0.5">{subtitle}</p>
+      </div>
+      <span className={`h-4 w-4 rounded-full border-2 mt-1 ${selected ? "border-charcoal bg-charcoal" : "border-hairline"}`} />
+    </button>
+  );
+}
+
 function SectionTitle({ title }: { title: string }) {
   return (
     <h2 className="text-sm font-bold tracking-luxe uppercase text-muted-brand pb-2 border-b border-hairline">
@@ -447,12 +544,12 @@ function Field({ label, required, error, children }: { label: string; required?:
   );
 }
 
-function BankRow({ label, value, onCopy }: { label: string; value: string; onCopy: (text: string) => void }) {
+function BankRow({ label, value, onCopy, ltr }: { label: string; value: string; onCopy: (text: string) => void; ltr?: boolean }) {
   return (
     <div className="flex items-center justify-between">
       <div>
         <p className="text-xs text-muted-brand">{label}</p>
-        <p className="text-sm font-medium text-charcoal" dir={label === "IBAN" || label === "رقم الحساب" ? "ltr" : "rtl"}>{value}</p>
+        <p className="text-sm font-medium text-charcoal" dir={ltr ? "ltr" : "rtl"}>{value}</p>
       </div>
       {value !== "—" && (
         <button

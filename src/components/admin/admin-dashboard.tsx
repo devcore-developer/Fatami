@@ -52,6 +52,7 @@ export function AdminDashboard() {
 
   return (
     <div className="flex">
+      {/* Sidebar */}
       <aside
         className={`${
           sidebarOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"
@@ -75,6 +76,7 @@ export function AdminDashboard() {
         </nav>
       </aside>
 
+      {/* Overlay for mobile */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-20 bg-black/40 lg:hidden"
@@ -82,7 +84,9 @@ export function AdminDashboard() {
         />
       )}
 
+      {/* Main */}
       <div className="flex-1 min-w-0">
+        {/* Mobile section toggle */}
         <div className="lg:hidden bg-background border-b border-border p-3 sticky top-16 z-20">
           <button
             onClick={() => setSidebarOpen(true)}

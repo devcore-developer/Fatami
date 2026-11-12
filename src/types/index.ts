@@ -1,4 +1,4 @@
-// Core domain types for Futami DESIGNS storefront & admin
+// Core domain types for FATAMI DESIGNS storefront & admin
 
 export type SizeCode =
   | "XS"
@@ -9,10 +9,10 @@ export type SizeCode =
   | "XXL";
 
 export interface SizeMeasurement {
-  shoulder: number;
+  shoulder: number; // inches
   chest: number;
   waist: number;
-  hips: number | string;
+  hips: number | string; // can be range "42-43"
 }
 
 export interface ProductSize {
@@ -32,7 +32,7 @@ export interface Product {
   name: string;
   nameAr: string;
   description: string;
-  price: number;
+  price: number; // KWD
   compareAtPrice?: number;
   categoryId: string;
   images: ProductImage[];
@@ -53,11 +53,13 @@ export interface Category {
   nameAr: string;
   slug: string;
   image?: string;
+  active?: boolean;
+  sortOrder?: number;
   productCount?: number;
 }
 
 export interface CartItem {
-  id: string;
+  id: string; // unique cart line id
   productId: string;
   product: Product;
   size: SizeCode;
@@ -78,7 +80,7 @@ export interface KuwaitGovernorate {
   id: string;
   name: string;
   nameAr: string;
-  shippingCost: number;
+  shippingCost: number; // KWD
 }
 
 export interface ShippingRate {
@@ -113,7 +115,7 @@ export interface OrderItem {
   productImage?: string;
   size: SizeCode;
   quantity: number;
-  price: number;
+  price: number; // snapshot at purchase time
   measurements?: CustomerMeasurements;
 }
 
@@ -170,6 +172,7 @@ export interface StoreSettings {
   whatsapp?: string;
   instagram?: string;
   tiktok?: string;
+  snapchat?: string;
   email?: string;
   phone?: string;
   freeShippingThreshold?: number;
@@ -177,8 +180,11 @@ export interface StoreSettings {
   bankAccount?: string;
   accountName?: string;
   iban?: string;
+  wamdPhone?: string;
+  wamdAccountName?: string;
 }
 
+// UI / view state
 export type StoreView =
   | "home"
   | "shop"

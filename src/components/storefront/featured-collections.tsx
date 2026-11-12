@@ -2,45 +2,63 @@
 
 import { ArrowLeft } from "lucide-react";
 import { useUI } from "@/store";
-import { images } from "@/data/catalog";
+import { useCatalog } from "@/components/storefront/catalog-provider";
 
 export function FeaturedCollections() {
   const { openCategory } = useUI();
+  const { categories, loaded } = useCatalog();
 
-  const collections = [
-    {
-      id: "cat-abayas",
-      title: "العبايات",
-      subtitle: "فخامة الأصالة",
-      image: images.collection1,
-      span: "lg:col-span-2 lg:row-span-2",
+  // Source: actual DB categories (active only — the public /api/categories
+  // endpoint filters them). Adds/removes in Admin are reflected here
+  // automatically because the catalog context re-fetches on refresh.
+  // Fallback subtitles per slug for nicer editorial copy.
+  const subtitleBySlug: Record<string, string> = {
+    abayas: "فخامة الأصالة",
+    dresses: "إطلالة ساحرة",
+    sets: "تناسق مثالي",
+    kaftans: "أناقة المناسبات",
+    bottoms: "إطلالة يومية",
+  };
+
+  const activeCats = categories.filter((c) => c.active !== false).slice(0, 6);
+  const total = activeCats.length;
+
+  const collections = activeCats.map((c, idx) => {
+    // Editorial grid spans — first item large, last item wide, rest compact.
+    let span = "";
+    if (idx === 0) span = "lg:col-span-2 lg:row-span-2";
+    else if (idx === total - 1 && total > 2) span = "lg:col-span-2";
+    return {
+      id: c.id,
+      title: c.nameAr,
+      subtitle: subtitleBySlug[c.slug] ?? "تشكيلة مميزة",
+      image: c.image ?? "",
+      span,
       h: "h-[280px] sm:h-[300px] lg:h-full",
-    },
-    {
-      id: "cat-dresses",
-      title: "الفساتين",
-      subtitle: "إطلالة ساحرة",
-      image: images.collection2,
-      span: "",
-      h: "h-[280px] sm:h-[300px] lg:h-full",
-    },
-    {
-      id: "cat-sets",
-      title: "الأطقم",
-      subtitle: "تناسق مثالي",
-      image: images.kimono1,
-      span: "",
-      h: "h-[280px] sm:h-[300px] lg:h-full",
-    },
-    {
-      id: "cat-kaftans",
-      title: "القفاطين",
-      subtitle: "أناقة المناسبات",
-      image: images.collection3,
-      span: "lg:col-span-2",
-      h: "h-[280px] sm:h-[300px] lg:h-full",
-    },
-  ];
+    };
+  });
+
+  if (!loaded && collections.length === 0) {
+    // No flash — just a soft placeholder while categories load.
+    return (
+      <section className="py-12 sm:py-16 lg:py-20 bg-cream">
+        <div className="container-luxe">
+          <div className="text-center mb-8 sm:mb-12">
+            <div className="flex items-center justify-center gap-3 mb-3">
+              <span className="h-px w-8 bg-brown/40" />
+              <p className="text-xs tracking-luxe text-brown font-medium">مجموعاتنا</p>
+              <span className="h-px w-8 bg-brown/40" />
+            </div>
+            <h2 className="text-2xl sm:text-3xl lg:text-[2.5rem] font-bold text-charcoal">اكتشفي مجموعتنا</h2>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (collections.length === 0) {
+    return null;
+  }
 
   return (
     <section className="py-12 sm:py-16 lg:py-20 bg-cream">
@@ -70,12 +88,18 @@ export function FeaturedCollections() {
             >
               {/* Image */}
               <div className="relative aspect-[4/5] overflow-hidden bg-beige">
-                <img
-                  src={c.image}
-                  alt={c.title}
-                  className="w-full h-full object-cover img-zoom"
-                  loading="lazy"
-                />
+                {c.image ? (
+                  <img
+                    src={c.image}
+                    alt={c.title}
+                    className="w-full h-full object-cover img-zoom"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-muted-brand text-xs">
+                    {c.title}
+                  </div>
+                )}
               </div>
               {/* Text below image — clearly visible, no overlay */}
               <div className="p-3 text-center">
@@ -86,7 +110,7 @@ export function FeaturedCollections() {
           ))}
         </div>
 
-        {/* ── Desktop: Editorial asymmetric grid with overlay (unchanged) ── */}
+        {/* ── Desktop: Editorial asymmetric grid with overlay ── */}
         <div className="hidden lg:grid lg:grid-cols-4 lg:grid-rows-2 gap-4 lg:h-[560px]">
           {collections.map((c, idx) => (
             <button
@@ -95,12 +119,18 @@ export function FeaturedCollections() {
               className={`group relative overflow-hidden ${c.span} ${c.h} animate-fade-up rounded-2xl`}
               style={{ animationDelay: `${idx * 100}ms` }}
             >
-              <img
-                src={c.image}
-                alt={c.title}
-                className="w-full h-full object-cover img-zoom"
-                loading="lazy"
-              />
+              {c.image ? (
+                <img
+                  src={c.image}
+                  alt={c.title}
+                  className="w-full h-full object-cover img-zoom"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="w-full h-full bg-beige flex items-center justify-center text-charcoal font-bold">
+                  {c.title}
+                </div>
+              )}
               <div className="absolute inset-0 bg-gradient-to-t from-charcoal/60 via-charcoal/10 to-transparent" />
               <div className="absolute inset-0 flex flex-col justify-end p-7 text-cream">
                 <p className="text-xs text-cream/75 mb-1.5 font-light">
