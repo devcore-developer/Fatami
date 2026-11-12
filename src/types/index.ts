@@ -1,4 +1,4 @@
-// Core domain types for FATAMI DESIGNS storefront & admin
+// Core domain types for Futami DESIGNS storefront & admin
 
 export type SizeCode =
   | "XS"

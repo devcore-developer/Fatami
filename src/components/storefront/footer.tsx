@@ -1,9 +1,12 @@
+// ─── src/components/storefront/footer.tsx ───
 "use client";
 
-import { Instagram, Mail, Phone, MapPin } from "lucide-react";
+import { Mail, Phone, MapPin } from "lucide-react";
 import { useUI } from "@/store";
-import { storeSettings } from "@/data/catalog";
 import { useCatalog } from "@/components/storefront/catalog-provider";
+import { BrandLogo } from "@/components/storefront/brand-logo";
+import { InstagramIcon, TiktokIcon, SnapchatIcon, WhatsAppIcon } from "@/components/icons/brand-icons";
+import { CONTACT, SOCIALS } from "@/lib/contact";
 
 export function StorefrontFooter() {
   const { setView, openCategory } = useUI();
@@ -16,14 +19,38 @@ export function StorefrontFooter() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12">
           {/* Brand */}
           <div className="lg:col-span-1">
-            <div className="flex flex-col mb-5">
-              <span className="text-2xl font-bold tracking-luxe-wide leading-none text-cream">FATAMI</span>
-              <span className="text-[10px] tracking-luxe-wide text-taupe mt-1.5">DESIGNS</span>
+            <div className="mb-5">
+              <BrandLogo size="sm" tone="light" className="items-start" />
             </div>
             <p className="text-sm text-cream/55 leading-[1.8] max-w-xs font-light">
               علامة أزياء كويتية فاخرة. نصمم قطعاً خالدة تجمع بين الأصالة والمعاصرة،
               بجودة عالية وأناقة لا تُضاهى.
             </p>
+
+            {/* Social links */}
+            <div className="flex items-center gap-2.5 mt-6">
+              {SOCIALS.filter((s) => s.id !== "whatsapp").map((s) => {
+                const Icon =
+                  s.id === "instagram"
+                    ? InstagramIcon
+                    : s.id === "tiktok"
+                    ? TiktokIcon
+                    : SnapchatIcon;
+                return (
+                  <a
+                    key={s.id}
+                    href={s.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={s.label}
+                    title={s.label}
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-cream/20 text-cream/70 hover:text-cream hover:border-taupe hover:bg-cream/5 transition-all"
+                  >
+                    <Icon className="h-4 w-4" />
+                  </a>
+                );
+              })}
+            </div>
           </div>
 
           {/* Quick navigation */}
@@ -80,33 +107,36 @@ export function StorefrontFooter() {
             <ul className="space-y-3.5 text-sm">
               <li className="flex items-center gap-2.5 text-cream/70">
                 <MapPin className="h-4 w-4 shrink-0 text-taupe" />
-                <span>الكويت</span>
+                <span>{CONTACT.location}</span>
               </li>
               <li>
                 <a
-                  href={`https://wa.me/${storeSettings.whatsapp?.replace(/\D/g, "")}`}
+                  href={CONTACT.whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2.5 text-cream/70 hover:text-cream transition-colors"
+                >
+                  <WhatsAppIcon className="h-4 w-4 shrink-0 text-taupe" />
+                  <span dir="ltr">{CONTACT.phoneDisplay}</span>
+                  <span className="text-[10px] text-taupe">(واتساب)</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href={`tel:${CONTACT.phoneTel}`}
                   className="flex items-center gap-2.5 text-cream/70 hover:text-cream transition-colors"
                 >
                   <Phone className="h-4 w-4 shrink-0 text-taupe" />
-                  <span dir="ltr">{storeSettings.phone}</span>
+                  <span dir="ltr">{CONTACT.phoneDisplay}</span>
                 </a>
               </li>
               <li>
                 <a
-                  href={`mailto:${storeSettings.email}`}
+                  href={`mailto:${CONTACT.email}`}
                   className="flex items-center gap-2.5 text-cream/70 hover:text-cream transition-colors"
                 >
                   <Mail className="h-4 w-4 shrink-0 text-taupe" />
-                  <span dir="ltr">{storeSettings.email}</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href={`https://instagram.com/${storeSettings.instagram}`}
-                  className="flex items-center gap-2.5 text-cream/70 hover:text-cream transition-colors"
-                >
-                  <Instagram className="h-4 w-4 shrink-0 text-taupe" />
-                  <span dir="ltr">@{storeSettings.instagram}</span>
+                  <span dir="ltr">{CONTACT.email}</span>
                 </a>
               </li>
             </ul>
@@ -116,7 +146,7 @@ export function StorefrontFooter() {
         {/* Payment methods + copyright */}
         <div className="mt-12 pt-6 border-t border-cream/10 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-cream/40 text-center sm:text-right font-light">
-            © {year} FATAMI DESIGNS — جميع الحقوق محفوظة
+            © {year} Futami DESIGNS — جميع الحقوق محفوظة
           </p>
           <div className="flex items-center gap-2.5 text-xs text-cream/40">
             <span className="hidden sm:inline">طرق الدفع</span>

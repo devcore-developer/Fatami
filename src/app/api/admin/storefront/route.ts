@@ -1,3 +1,4 @@
+// ─── src/app/api/admin/storefront/route.ts ───
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentAdmin } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
@@ -23,6 +24,7 @@ export async function PUT(req: NextRequest) {
     const updated = await db.storefrontContent.upsert({
       where: { id: "singleton" },
       update: {
+        logoImage: body.logoImage,
         heroImage: body.heroImage,
         mobileHeroImage: body.mobileHeroImage,
         heroTitle: body.heroTitle,
@@ -37,6 +39,7 @@ export async function PUT(req: NextRequest) {
       },
       create: {
         id: "singleton",
+        logoImage: body.logoImage,
         heroImage: body.heroImage,
         mobileHeroImage: body.mobileHeroImage,
         heroTitle: body.heroTitle,

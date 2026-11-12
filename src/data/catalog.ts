@@ -1,3 +1,4 @@
+// ─── src/data/catalog.ts ───
 // Mock catalog data for Futami DESIGNS — Phase 1 storefront
 // Replaced by real database data in Phase 2.
 
@@ -290,15 +291,19 @@ export const kuwaitGovernorates: KuwaitGovernorate[] = [
   { id: "g8", name: "Sabah Al Ahmad", nameAr: "صباح الأحمد", shippingCost: 5 },
 ];
 
+// بيانات المتجر الافتراضية (fallback قبل ما بيانات لوحة الإدارة تتحمّل).
+// تم تحديثها ببيانات التواصل الرسمية للمتجر.
+// ملاحظة: روابط السوشيال الرسمية مصدرها src/lib/contact.ts.
 export const storeSettings: StoreSettings = {
   brandName: "Futami DESIGNS",
   brandTagline: "أناقة بلا حدود",
   currency: "KWD",
-  whatsapp: "+96590000000",
-  instagram: "Futami.designs",
-  tiktok: "Futamidesigns",
-  email: "info@Futamidesigns.com",
-  phone: "+965 9000 0000",
+  whatsapp: "+96550518057",
+  instagram: "fatamidesigns",
+  tiktok: "fatamidesigns",
+  snapchat: "fatamidesigns",
+  email: "fat.obeed@gmail.com",
+  phone: "+965 50518057",
 };
 
 export function getProductBySlug(slug: string): Product | undefined {

@@ -1,3 +1,4 @@
+// ─── src/components/admin/sections/storefront-content-section.tsx ───
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
@@ -71,12 +72,32 @@ export function StorefrontContentSection() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-charcoal">محتوى الصفحة الرئيسية</h1>
-          <p className="text-sm text-muted-brand mt-1">إدارة صور ونصوص الهيرو والبانر الإعلاني</p>
+          <p className="text-sm text-muted-brand mt-1">إدارة اللوجو وصور ونصوص الهيرو والبانر الإعلاني</p>
         </div>
         <Button onClick={save} disabled={saving} className="gap-2 bg-charcoal text-cream hover:bg-dark-brown">
           <Save className="h-4 w-4" />
           {saving ? "جاري الحفظ..." : "حفظ التغييرات"}
         </Button>
+      </div>
+
+      {/* ── اللوجو ── */}
+      <div className="border border-hairline rounded-2xl bg-surface p-6 space-y-5">
+        <h2 className="text-base font-bold text-charcoal flex items-center gap-2">
+          <ImageIcon className="h-4 w-4 text-brown" />
+          لوجو الموقع
+        </h2>
+        <p className="text-xs text-muted-brand leading-relaxed">
+          اللوجو يظهر في ثلاثة أماكن: شريط فوق صورة الهيرو في الصفحة الرئيسية، وسط الهيدر،
+          والفوتر. الأفضل رفع ملف PNG بخلفية شفافة وبدقة عالية. لو مش مرفوع، الموقع يعرض
+          اسم العلامة نصياً تلقائياً.
+        </p>
+        <ImageField
+          label="ملف اللوجو"
+          value={content.logoImage}
+          onChange={(url) => setContent({ ...content, logoImage: url })}
+          onUpload={(file) => uploadImage(file, "logoImage")}
+          onClear={() => setContent({ ...content, logoImage: null })}
+        />
       </div>
 
       {/* Hero Section */}

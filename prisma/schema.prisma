@@ -1,3 +1,4 @@
+// ─── prisma/schema.prisma ───
 // Prisma schema for FATAMI DESIGNS
 // Note: sandbox uses SQLite locally. For production (Vercel + PostgreSQL),
 // change `provider = "sqlite"` to `provider = "postgresql"` and use a
@@ -176,6 +177,7 @@ model StoreSettings {
 
 model StorefrontContent {
   id                   String   @id @default(cuid())
+  logoImage            String?  // لوجو الموقع — يظهر في الهوم بيدج والهيدر والفوتر (PNG بخلفية شفافة مفضّل)
   heroImage            String?
   mobileHeroImage      String?
   heroTitle            String   @default("الأناقة في أبسط صورها")

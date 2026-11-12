@@ -1,16 +1,31 @@
+// ─── src/components/storefront/header.tsx ───
+// بنية الهيدر الصحيحة (بالترتيب):
+//   1) شريط الهوية العلوي: اللوجو في المنتصف + "صُنع في الكويت" تحته،
+//      البحث والسلة على الشمال وقائمة الموبايل على اليمين — نفس مواضعهما السابقة.
+//   2) شريط التنقل: روابط التنقل بنفس التصميم السابق، مباشرة تحت شريط الهوية.
+// الهيرو يبدأ مباشرة بعد الهيدر — تم حذف قسم اللوجو المكرر فوق الهيرو نهائياً.
+
 "use client";
 
+import { useState } from "react";
 import { ShoppingBag, Search, Menu, X } from "lucide-react";
 import { useCart, useUI } from "@/store";
-import { storeSettings } from "@/data/catalog";
 import { useCatalog } from "@/components/storefront/catalog-provider";
+import { BrandLogo } from "@/components/storefront/brand-logo";
+import { CONTACT } from "@/lib/contact";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { useState } from "react";
 
 export function StorefrontHeader() {
   const { openCart, itemCount } = useCart();
-  const { setMenuOpen, isMenuOpen, setView, openCategory, setSearchOpen, isSearchOpen, setSearchQuery } =
-    useUI();
+  const {
+    setMenuOpen,
+    isMenuOpen,
+    setView,
+    openCategory,
+    setSearchOpen,
+    isSearchOpen,
+    setSearchQuery,
+  } = useUI();
   const { categories } = useCatalog();
   const count = itemCount();
   const [localQuery, setLocalQuery] = useState("");
@@ -21,7 +36,7 @@ export function StorefrontHeader() {
     setView("shop");
   };
 
-  // Build nav from actual categories — الرئيسية, جميع المنتجات, then categories, then عن FATAMI
+  // Build nav from actual categories — الرئيسية, جميع المنتجات, then categories, then عن Futami
   const navItems = [
     { label: "الرئيسية", action: goHome },
     { label: "جميع المنتجات", action: goShop },
@@ -29,15 +44,15 @@ export function StorefrontHeader() {
       label: c.nameAr,
       action: () => openCategory(c.id),
     })),
-    { label: "عن FATAMI", action: () => setView("about") },
+    { label: "عن Futami", action: () => setView("about") },
   ];
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-hairline bg-cream">
       <div className="container-luxe">
-        {/* Main header row */}
-        <div className="flex h-16 sm:h-20 items-center justify-between gap-4">
-          {/* Right (RTL): menu */}
+        {/* ── 1) Top Branding Bar — اللوجو في النص، مستقل تماماً عن أزرار الجوانب ── */}
+        <div className="flex items-center py-2 sm:py-2.5">
+          {/* يمين (RTL): قائمة الموبايل — نفس موضعها السابق */}
           <div className="flex items-center flex-1">
             <Sheet open={isMenuOpen} onOpenChange={setMenuOpen}>
               <SheetTrigger asChild>
@@ -99,33 +114,47 @@ export function StorefrontHeader() {
                   <p className="text-[10px] text-muted-brand mb-2.5 tracking-luxe uppercase">
                     تواصل
                   </p>
-                  <p className="text-sm mb-1 text-charcoal" dir="ltr">{storeSettings.phone}</p>
-                  <p className="text-sm text-muted-brand" dir="ltr">{storeSettings.email}</p>
+                  <a
+                    href={`tel:${CONTACT.phoneTel}`}
+                    className="block text-sm mb-1.5 text-charcoal hover:text-brown transition-colors"
+                    dir="ltr"
+                  >
+                    {CONTACT.phoneDisplay}
+                  </a>
+                  <a
+                    href={CONTACT.whatsappUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block text-sm mb-1.5 text-charcoal hover:text-brown transition-colors"
+                    dir="ltr"
+                  >
+                    {CONTACT.phoneDisplay} <span className="text-[10px] text-muted-brand">(واتساب)</span>
+                  </a>
+                  <a
+                    href={`mailto:${CONTACT.email}`}
+                    className="block text-sm text-muted-brand hover:text-brown transition-colors"
+                    dir="ltr"
+                  >
+                    {CONTACT.email}
+                  </a>
                 </div>
               </SheetContent>
             </Sheet>
           </div>
 
-          {/* Center: brand */}
+          {/* المنتصف: اللوجو + "صُنع في الكويت" تحته — في النص على الموبايل والديسكتوب */}
           <button
             onClick={goHome}
-            className="flex flex-col items-center justify-center shrink-0"
-            aria-label="FATAMI DESIGNS"
+            className="flex flex-col items-center justify-center shrink-0 px-2"
+            aria-label="Futami DESIGNS"
           >
-            <span className="text-xl sm:text-2xl font-bold tracking-luxe-wide leading-none text-charcoal">
-              FATAMI
-            </span>
-            <span className="text-[9px] sm:text-[10px] tracking-luxe-wide text-taupe mt-1">
-              DESIGNS
-            </span>
-            {/* Mobile-only tagline — "صنع في الكويت". Hidden on desktop so
-                the desktop header layout/spacing is not changed. */}
-            <span className="lg:hidden text-[8px] tracking-normal text-brown/70 mt-1.5 font-medium">
-              صنع في الكويت
+            <BrandLogo size="sm" />
+            <span className="mt-1 text-[9px] sm:text-[10px] font-medium tracking-wide text-brown/80">
+              صُنع في الكويت
             </span>
           </button>
 
-          {/* Left (RTL): actions */}
+          {/* شمال (RTL): البحث + السلة — نفس موضعها السابق */}
           <div className="flex items-center flex-1 justify-end">
             <button
               onClick={() => setSearchOpen(!isSearchOpen)}
@@ -173,7 +202,7 @@ export function StorefrontHeader() {
           </div>
         )}
 
-        {/* Desktop nav */}
+        {/* ── 2) Navigation Bar — مباشرة تحت شريط الهوية، بنفس التصميم والروابط السابقة ── */}
         <nav className="hidden lg:flex items-center justify-center gap-8 h-12 border-t border-hairline">
           {navItems.map((item, i) => (
             <NavBtn key={i} onClick={item.action}>

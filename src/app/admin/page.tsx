@@ -87,7 +87,7 @@ function AdminTopBar({ user, onLogout, onExitToStore }: {
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex flex-col leading-none">
-              <span className="text-base font-bold tracking-luxe-wide text-cream">FATAMI</span>
+              <span className="text-base font-bold tracking-luxe-wide text-cream">Futami</span>
               <span className="text-[9px] tracking-luxe-wide text-taupe">ADMIN</span>
             </div>
             <span className="h-6 w-px bg-cream/20" />

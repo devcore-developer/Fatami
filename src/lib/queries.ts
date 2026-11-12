@@ -1,4 +1,4 @@
-// Server-side data access layer for FATAMI DESIGNS
+// Server-side data access layer for Futami DESIGNS
 // All functions query Prisma directly. Used by API routes & server components.
 
 import { db } from "@/lib/db";
@@ -117,7 +117,7 @@ export async function getStoreSettings(): Promise<StoreSettings> {
   const row = await db.storeSettings.findUnique({ where: { id: "singleton" } });
   if (!row) {
     return {
-      brandName: "FATAMI DESIGNS",
+      brandName: "Futami DESIGNS",
       brandTagline: "أناقة بلا حدود",
       currency: "KWD",
     };

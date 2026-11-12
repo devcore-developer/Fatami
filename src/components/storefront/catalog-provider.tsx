@@ -1,3 +1,4 @@
+// ─── src/components/storefront/catalog-provider.tsx ───
 "use client";
 
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
@@ -10,6 +11,7 @@ import {
 
 // Storefront content shape — mirrors Prisma StorefrontContent model
 export interface StorefrontContent {
+  logoImage?: string | null;
   heroImage?: string | null;
   mobileHeroImage?: string | null;
   heroTitle?: string;

@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Lock, Mail } from "lucide-react";
 
 export function AdminLogin({ onSuccess }: { onSuccess: (user: { name: string; email: string }) => void }) {
-  const [email, setEmail] = useState("admin@fatamidesigns.com");
+  const [email, setEmail] = useState("admin@Futamidesigns.com");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -44,7 +44,7 @@ export function AdminLogin({ onSuccess }: { onSuccess: (user: { name: string; em
         </div>
         <h1 className="text-2xl font-bold mb-2">لوحة الإدارة</h1>
         <p className="text-sm text-muted-foreground">
-          FATAMI DESIGNS — تسجيل دخول المسؤول
+          Futami DESIGNS — تسجيل دخول المسؤول
         </p>
       </div>
 
@@ -83,7 +83,7 @@ export function AdminLogin({ onSuccess }: { onSuccess: (user: { name: string; em
         </Button>
         <div className="text-xs text-center text-muted-foreground border-t border-border pt-4">
           <p>بيانات الدخول التجريبية:</p>
-          <p className="font-mono mt-1" dir="ltr">admin@fatamidesigns.com / admin123</p>
+          <p className="font-mono mt-1" dir="ltr">admin@Futamidesigns.com / admin123</p>
         </div>
       </form>
     </div>

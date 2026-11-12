@@ -1,10 +1,13 @@
+// ─── src/components/storefront/static-pages.tsx ───
 "use client";
 
 import { useState } from "react";
 import { useUI } from "@/store";
-import { storeSettings, images } from "@/data/catalog";
+import { images } from "@/data/catalog";
 import { formatPrice } from "@/lib/format";
-import { Check, Truck, RotateCcw, Ruler, Sparkles, Instagram, Mail } from "lucide-react";
+import { CONTACT, SOCIALS } from "@/lib/contact";
+import { InstagramIcon, TiktokIcon, SnapchatIcon, WhatsAppIcon } from "@/components/icons/brand-icons";
+import { Check, Ruler, Sparkles, Mail, Phone } from "lucide-react";
 
 export function StaticPages() {
   const { view, setView, lastOrderNumber } = useUI();
@@ -54,7 +57,7 @@ function AboutPage() {
       <section className="relative h-[400px] sm:h-[480px] bg-black overflow-hidden">
         <img
           src={images.about}
-          alt="FATAMI DESIGNS"
+          alt="Futami DESIGNS"
           className="absolute inset-0 w-full h-full object-cover opacity-60"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
@@ -63,7 +66,7 @@ function AboutPage() {
             قصتنا
           </p>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white">
-            FATAMI DESIGNS
+            Futami DESIGNS
           </h1>
         </div>
       </section>
@@ -71,7 +74,7 @@ function AboutPage() {
       <div className="container-narrow py-16 sm:py-24 space-y-12">
         <div className="text-center max-w-2xl mx-auto">
           <p className="text-lg leading-relaxed text-muted-foreground">
-            FATAMI DESIGNS علامة أزياء كويتية وُلدت من شغف الأناقة والجمال.
+            Futami DESIGNS علامة أزياء كويتية وُلدت من شغف الأناقة والجمال.
             نصمم قطعاً خالدة تجمع بين الأصالة الكويتية واللمسة العصرية،
             لتمنح المرأة العصرية إطلالة فاخرة تعبّر عن شخصيتها المميزة.
           </p>
@@ -96,7 +99,7 @@ function AboutPage() {
         </div>
 
         <div className="border-t border-border pt-12">
-          <h2 className="text-2xl font-bold mb-6 text-center">لماذا FATAMI؟</h2>
+          <h2 className="text-2xl font-bold mb-6 text-center">لماذا Futami؟</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
             <Feature title="خامات فاخرة" body="نختار أجود الأقمشة لنضمن لكِ راحة وأناقة تدوم." />
             <Feature title="تصاميم حصرية" body="كل قطعة مصممة بعناية لتكون فريدة ومميزة." />
@@ -110,42 +113,64 @@ function AboutPage() {
 }
 
 function ContactPage() {
-  const s = storeSettings;
-  // Build the list of contact channels from configured settings only.
-  // Each channel opens its correct destination; nothing is invented.
-  const channels: { label: string; value: string; href?: string; icon: React.ReactNode }[] = [];
-  if (s.instagram) {
-    channels.push({
-      label: "إنستغرام",
-      value: `@${s.instagram}`,
-      href: `https://instagram.com/${s.instagram}`,
-      icon: <Instagram className="h-5 w-5" />,
-    });
-  }
-  if (s.email) {
-    channels.push({
+  // قنوات التواصل الرسمية — من src/lib/contact.ts (المصدر الوحيد لبيانات التواصل).
+  const channels: { label: string; value: string; href?: string; icon: React.ReactNode }[] = [
+    {
+      label: "واتساب",
+      value: CONTACT.phoneDisplay,
+      href: CONTACT.whatsappUrl,
+      icon: <WhatsAppIcon className="h-5 w-5" />,
+    },
+    {
+      label: "اتصال مباشر",
+      value: CONTACT.phoneDisplay,
+      href: `tel:${CONTACT.phoneTel}`,
+      icon: <Phone className="h-5 w-5" />,
+    },
+    {
       label: "البريد الإلكتروني",
-      value: s.email,
-      href: `mailto:${s.email}`,
+      value: CONTACT.email,
+      href: `mailto:${CONTACT.email}`,
       icon: <Mail className="h-5 w-5" />,
-    });
-  }
-  if (s.snapchat) {
-    channels.push({
-      label: "سناب شات",
-      value: `@${s.snapchat}`,
-      href: `https://snapchat.com/add/${s.snapchat}`,
-      icon: <SnapchatIcon />,
-    });
-  }
-  if (s.tiktok) {
-    channels.push({
-      label: "تيك توك",
-      value: `@${s.tiktok}`,
-      href: `https://tiktok.com/@${s.tiktok}`,
-      icon: <TiktokIcon />,
-    });
-  }
+    },
+    ...SOCIALS.filter((s) => s.id !== "whatsapp").map((s) => ({
+      label: s.label,
+      value: s.handle,
+      href: s.url,
+      icon:
+        s.id === "instagram" ? (
+          <InstagramIcon className="h-5 w-5" />
+        ) : s.id === "tiktok" ? (
+          <TiktokIcon className="h-5 w-5" />
+        ) : (
+          <SnapchatIcon className="h-5 w-5" />
+        ),
+    })),
+  ];
+
+  // إرسال الرسالة عبر واتساب مباشرة — الرسالة تُفتح في محادثة المتجر نصاً جاهزاً.
+  const sendMessage = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    const name = String(fd.get("name") || "").trim();
+    const email = String(fd.get("email") || "").trim();
+    const subject = String(fd.get("subject") || "").trim();
+    const message = String(fd.get("message") || "").trim();
+
+    const lines = [
+      `مرحباً Futami DESIGNS،`,
+      subject ? `الموضوع: ${subject}` : "",
+      message,
+      email ? `بريدي للرد: ${email}` : "",
+      name ? `— ${name}` : "",
+    ].filter(Boolean);
+
+    window.open(
+      `${CONTACT.whatsappUrl}?text=${encodeURIComponent(lines.join("\n"))}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
+  };
 
   return (
     <PageShell title="تواصل معنا" eyebrow="نحن هنا لخدمتك">
@@ -179,64 +204,44 @@ function ContactPage() {
             </div>
           )
         )}
-        {channels.length === 0 && (
-          <p className="text-muted-foreground col-span-2 text-center">
-            لم يتم ضبط قنوات التواصل بعد.
-          </p>
-        )}
       </div>
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          alert("تم استلام رسالتك، سنتواصل معك قريباً");
-        }}
-        className="space-y-5 max-w-xl mx-auto"
-      >
+      <form onSubmit={sendMessage} className="space-y-5 max-w-xl mx-auto">
         <div className="grid grid-cols-2 gap-4">
           <input
             required
+            name="name"
             placeholder="الاسم"
             className="h-11 px-4 bg-secondary border-0 focus:ring-1 focus:ring-ring outline-none"
           />
           <input
             required
+            name="email"
             placeholder="البريد الإلكتروني"
             type="email"
             className="h-11 px-4 bg-secondary border-0 focus:ring-1 focus:ring-ring outline-none"
           />
         </div>
         <input
+          name="subject"
           placeholder="الموضوع"
           className="w-full h-11 px-4 bg-secondary border-0 focus:ring-1 focus:ring-ring outline-none"
         />
         <textarea
           required
+          name="message"
           rows={5}
           placeholder="رسالتك"
           className="w-full p-4 bg-secondary border-0 focus:ring-1 focus:ring-ring outline-none resize-none"
         />
         <button className="w-full h-12 bg-foreground text-background text-sm tracking-luxe uppercase font-medium hover:bg-foreground/90 transition-colors">
-          إرسال الرسالة
+          إرسال الرسالة عبر واتساب
         </button>
+        <p className="text-xs text-muted-foreground text-center">
+          اضغطي إرسال وسيتم فتح واتساب برسالتك جاهزة للإرسال إلى {CONTACT.phoneDisplay}
+        </p>
       </form>
     </PageShell>
-  );
-}
-
-// Lightweight inline Snapchat / TikTok glyph (avoids extra dependency).
-function SnapchatIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden="true">
-      <path d="M12.2 2.5c2.1 0 3.4 1.6 3.5 3.6 0 .5 0 1.1-.1 1.6.3.2.7.2 1 .1.6-.2 1.2.5.8 1-.4.5-1.3.6-1.8 1.4.4 1.2 1.4 2.4 2.7 2.7.5.1.8.6.5 1-.4.6-1.8.5-2.2 1.1-.3.6.3 1.5-1 1.8-.8.2-1.7-.3-2.6.1-.8.4-1.3 1.4-2.5 1.4s-1.7-1-2.5-1.4c-.9-.4-1.8.1-2.6-.1-1.3-.3-.7-1.2-1-1.8-.4-.6-1.8-.5-2.2-1.1-.3-.4 0-.9.5-1 1.3-.3 2.3-1.5 2.7-2.7-.5-.8-1.4-.9-1.8-1.4-.4-.5.2-1.2.8-1 .3.1.7.1 1-.1 0-.5-.1-1.1-.1-1.6.1-2 1.4-3.6 3.5-3.6.1 0 .2 0 .2.1z"/>
-    </svg>
-  );
-}
-function TiktokIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden="true">
-      <path d="M16.6 5.8a4.3 4.3 0 0 1-1.4-1 4.3 4.3 0 0 1-1-2.6h-3v12.2c0 1.4-1.1 2.5-2.4 2.5a2.4 2.4 0 0 1-2.4-2.4 2.4 2.4 0 0 1 2.9-2.3v-3a5.4 5.4 0 0 0-5.4 5.3 5.4 5.4 0 0 0 5.4 5.4 5.4 5.4 0 0 0 5.4-5.4V9.3a7.2 7.2 0 0 0 4.2 1.4V7.6c-.8 0-1.5-.2-2.3-.6a4.3 4.3 0 0 1-1-1.2z"/>
-    </svg>
   );
 }
 
@@ -349,7 +354,7 @@ function PrivacyPage() {
   return (
     <PageShell title="سياسة الخصوصية" eyebrow="نحمي بياناتك">
       <div className="max-w-2xl mx-auto space-y-6 text-sm leading-relaxed text-muted-foreground">
-        <p>نلتزم في FATAMI DESIGNS بحماية خصوصيتك وبياناتك الشخصية. لا نشارك معلوماتك مع أي طرف ثالث دون موافقتك.</p>
+        <p>نلتزم في Futami DESIGNS بحماية خصوصيتك وبياناتك الشخصية. لا نشارك معلوماتك مع أي طرف ثالث دون موافقتك.</p>
         <InfoBlock title="البيانات التي نجمعها">
           <ul className="space-y-1.5">
             <li>• الاسم ومعلومات التواصل</li>
@@ -369,7 +374,7 @@ function TermsPage() {
   return (
     <PageShell title="الشروط والأحكام" eyebrow="باستخدامك للموقع">
       <div className="max-w-2xl mx-auto space-y-6 text-sm leading-relaxed text-muted-foreground">
-        <p>باستخدامك لموقع FATAMI DESIGNS، فإنك توافقين على الشروط والأحكام التالية:</p>
+        <p>باستخدامك لموقع Futami DESIGNS، فإنك توافقين على الشروط والأحكام التالية:</p>
         <InfoBlock title="الطلبات">
           <p>يحق لنا رفض أو إلغاء أي طلب في حال وجود خطأ في الأسعار أو توفر المنتج. سيتم إعلامك فوراً في حال إلغاء طلبك.</p>
         </InfoBlock>
@@ -377,7 +382,7 @@ function TermsPage() {
           <p>جميع الأسعار بالدينار الكويتي (د.ك). نحتفظ بحق تعديل الأسعار في أي وقت دون إشعار مسبق.</p>
         </InfoBlock>
         <InfoBlock title="الملكية الفكرية">
-          <p>جميع المحتويات والتصاميم والصور في هذا الموقع مملوكة لـ FATAMI DESIGNS ولا يجوز استخدامها دون إذن.</p>
+          <p>جميع المحتويات والتصاميم والصور في هذا الموقع مملوكة لـ Futami DESIGNS ولا يجوز استخدامها دون إذن.</p>
         </InfoBlock>
       </div>
     </PageShell>
@@ -394,7 +399,7 @@ function OrderSuccessPage({ orderNumber }: { orderNumber: string | null }) {
         </div>
         <h1 className="text-3xl font-bold mb-3">تم إنشاء طلبك بنجاح</h1>
         <p className="text-muted-foreground mb-6">
-          شكراً لتسوّقك من FATAMI DESIGNS. تم استلام طلبك وسنتواصل معك قريباً.
+          شكراً لتسوّقك من Futami DESIGNS. تم استلام طلبك وسنتواصل معك قريباً.
         </p>
         {orderNumber && (
           <div className="inline-flex items-center gap-2 px-6 py-3 border border-border mb-8">
@@ -582,17 +587,6 @@ function Feature({ title, body }: { title: string; body: string }) {
         <h4 className="font-medium text-sm mb-1">{title}</h4>
         <p className="text-sm text-muted-foreground">{body}</p>
       </div>
-    </div>
-  );
-}
-
-function ContactBlock({ title, value }: { title: string; value: string }) {
-  return (
-    <div className="border border-border p-6 text-center">
-      <p className="text-xs tracking-luxe uppercase text-muted-foreground mb-2">
-        {title}
-      </p>
-      <p className="font-medium" dir="ltr">{value}</p>
     </div>
   );
 }

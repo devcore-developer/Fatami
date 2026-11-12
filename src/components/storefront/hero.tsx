@@ -37,7 +37,7 @@ export function Hero() {
             <img src={desktopHero} alt="" className="w-full h-full object-cover object-[75%_center] scale-110 blur-3xl opacity-20" />
           </div>
           <div className="absolute inset-0 z-10 hidden lg:block">
-            <img src={desktopHero} alt="FATAMI DESIGNS" className="w-full h-full object-cover object-[26%_center] hero-mask-horizontal" />
+            <img src={desktopHero} alt="Futami DESIGNS" className="w-full h-full object-cover object-[26%_center] hero-mask-horizontal" />
           </div>
           <div className="absolute inset-0 z-10 hidden lg:block bg-gradient-to-r from-transparent via-transparent to-cream/30 pointer-events-none" />
         </>
@@ -46,7 +46,7 @@ export function Hero() {
       {/* ── Mobile: Dedicated mobile hero image on top, NO overlap with text ── */}
       {showImages && (
         <div className="lg:hidden relative w-full h-[420px] overflow-hidden">
-          <img src={mobileHero} alt="FATAMI DESIGNS" className="w-full h-full object-cover object-[center_30%]" />
+          <img src={mobileHero} alt="Futami DESIGNS" className="w-full h-full object-cover object-[center_30%]" />
           {/* Subtle fade at bottom into cream */}
           <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-b from-transparent to-cream" />
         </div>

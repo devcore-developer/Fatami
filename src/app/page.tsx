@@ -1,3 +1,4 @@
+// ─── src/app/page.tsx ───
 "use client";
 
 import { StorefrontHeader } from "@/components/storefront/header";
@@ -9,6 +10,7 @@ import { SizeChartModal } from "@/components/product/size-chart-modal";
 import { CartDrawer } from "@/components/cart/cart-drawer";
 import { CheckoutView } from "@/components/checkout/checkout-view";
 import { StaticPages } from "@/components/storefront/static-pages";
+import { WhatsAppFloat } from "@/components/storefront/whatsapp-float";
 import { CatalogProvider } from "@/components/storefront/catalog-provider";
 import { useUI } from "@/store";
 
@@ -40,6 +42,7 @@ export default function Home() {
 
         <SizeChartModal />
         <CartDrawer />
+        <WhatsAppFloat />
       </div>
     </CatalogProvider>
   );
