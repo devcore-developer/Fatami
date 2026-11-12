@@ -86,27 +86,27 @@ export function StorefrontFooter() {
                 <a
                   href={`https://wa.me/${storeSettings.whatsapp?.replace(/\D/g, "")}`}
                   className="flex items-center gap-2.5 text-cream/70 hover:text-cream transition-colors"
-                  dir="ltr"
                 >
-                  <Phone className="h-4 w-4 shrink-0 text-taupe" /> {storeSettings.phone}
+                  <Phone className="h-4 w-4 shrink-0 text-taupe" />
+                  <span dir="ltr">{storeSettings.phone}</span>
                 </a>
               </li>
               <li>
                 <a
                   href={`mailto:${storeSettings.email}`}
                   className="flex items-center gap-2.5 text-cream/70 hover:text-cream transition-colors"
-                  dir="ltr"
                 >
-                  <Mail className="h-4 w-4 shrink-0 text-taupe" /> {storeSettings.email}
+                  <Mail className="h-4 w-4 shrink-0 text-taupe" />
+                  <span dir="ltr">{storeSettings.email}</span>
                 </a>
               </li>
               <li>
                 <a
                   href={`https://instagram.com/${storeSettings.instagram}`}
                   className="flex items-center gap-2.5 text-cream/70 hover:text-cream transition-colors"
-                  dir="ltr"
                 >
-                  <Instagram className="h-4 w-4 shrink-0 text-taupe" /> @{storeSettings.instagram}
+                  <Instagram className="h-4 w-4 shrink-0 text-taupe" />
+                  <span dir="ltr">@{storeSettings.instagram}</span>
                 </a>
               </li>
             </ul>

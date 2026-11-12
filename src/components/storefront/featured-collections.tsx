@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useUI } from "@/store";
 import { useCatalog } from "@/components/storefront/catalog-provider";
@@ -21,22 +22,13 @@ export function FeaturedCollections() {
   };
 
   const activeCats = categories.filter((c) => c.active !== false).slice(0, 6);
-  const total = activeCats.length;
 
-  const collections = activeCats.map((c, idx) => {
-    // Editorial grid spans — first item large, last item wide, rest compact.
-    let span = "";
-    if (idx === 0) span = "lg:col-span-2 lg:row-span-2";
-    else if (idx === total - 1 && total > 2) span = "lg:col-span-2";
-    return {
-      id: c.id,
-      title: c.nameAr,
-      subtitle: subtitleBySlug[c.slug] ?? "تشكيلة مميزة",
-      image: c.image ?? "",
-      span,
-      h: "h-[280px] sm:h-[300px] lg:h-full",
-    };
-  });
+  const collections = activeCats.map((c) => ({
+    id: c.id,
+    title: c.nameAr,
+    subtitle: subtitleBySlug[c.slug] ?? "تشكيلة مميزة",
+    image: c.image ?? "",
+  }));
 
   if (!loaded && collections.length === 0) {
     // No flash — just a soft placeholder while categories load.
@@ -77,77 +69,84 @@ export function FeaturedCollections() {
           </h2>
         </div>
 
-        {/* ── Mobile: Cards with text BELOW image (no overlay) ── */}
-        <div className="grid grid-cols-2 lg:hidden gap-3">
+        {/* Uniform grid — same aspect ratio on every card, no asymmetric spans.
+            Mobile: 2 cols, tablet: 2 cols, desktop: 3 cols. */}
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {collections.map((c, idx) => (
-            <button
+            <CollectionCard
               key={c.id}
+              title={c.title}
+              subtitle={c.subtitle}
+              image={c.image}
+              index={idx}
               onClick={() => openCategory(c.id)}
-              className="group overflow-hidden rounded-2xl border border-hairline bg-surface animate-fade-up"
-              style={{ animationDelay: `${idx * 80}ms` }}
-            >
-              {/* Image */}
-              <div className="relative aspect-[4/5] overflow-hidden bg-beige">
-                {c.image ? (
-                  <img
-                    src={c.image}
-                    alt={c.title}
-                    className="w-full h-full object-cover img-zoom"
-                    loading="lazy"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-muted-brand text-xs">
-                    {c.title}
-                  </div>
-                )}
-              </div>
-              {/* Text below image — clearly visible, no overlay */}
-              <div className="p-3 text-center">
-                <h3 className="text-sm font-bold text-charcoal mb-0.5">{c.title}</h3>
-                <p className="text-[10px] text-muted-brand line-clamp-1">{c.subtitle}</p>
-              </div>
-            </button>
-          ))}
-        </div>
-
-        {/* ── Desktop: Editorial asymmetric grid with overlay ── */}
-        <div className="hidden lg:grid lg:grid-cols-4 lg:grid-rows-2 gap-4 lg:h-[560px]">
-          {collections.map((c, idx) => (
-            <button
-              key={c.id}
-              onClick={() => openCategory(c.id)}
-              className={`group relative overflow-hidden ${c.span} ${c.h} animate-fade-up rounded-2xl`}
-              style={{ animationDelay: `${idx * 100}ms` }}
-            >
-              {c.image ? (
-                <img
-                  src={c.image}
-                  alt={c.title}
-                  className="w-full h-full object-cover img-zoom"
-                  loading="lazy"
-                />
-              ) : (
-                <div className="w-full h-full bg-beige flex items-center justify-center text-charcoal font-bold">
-                  {c.title}
-                </div>
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-charcoal/60 via-charcoal/10 to-transparent" />
-              <div className="absolute inset-0 flex flex-col justify-end p-7 text-cream">
-                <p className="text-xs text-cream/75 mb-1.5 font-light">
-                  {c.subtitle}
-                </p>
-                <h3 className="text-xl lg:text-2xl font-bold mb-3 text-cream">
-                  {c.title}
-                </h3>
-                <span className="inline-flex items-center gap-2 text-xs text-cream/90 border-b border-cream/40 pb-0.5 w-fit group-hover:border-cream group-hover:gap-3 transition-all duration-300">
-                  تصفحي
-                  <ArrowLeft className="h-3 w-3 transition-transform duration-300 group-hover:-translate-x-1" />
-                </span>
-              </div>
-            </button>
+            />
           ))}
         </div>
       </div>
     </section>
+  );
+}
+
+/* ── Single card with consistent aspect ratio + onError fallback ── */
+function CollectionCard({
+  title,
+  subtitle,
+  image,
+  index,
+  onClick,
+}: {
+  title: string;
+  subtitle: string;
+  image: string;
+  index: number;
+  onClick: () => void;
+}) {
+  // If the image fails to load (404, stale URL, hot-link block) we hide the
+  // <img> and fall back to the branded placeholder — no broken image icon.
+  const [broken, setBroken] = useState(false);
+  const showImage = image && !broken;
+
+  return (
+    <button
+      onClick={onClick}
+      className="group relative overflow-hidden rounded-2xl bg-surface animate-fade-up text-right"
+      style={{ animationDelay: `${index * 80}ms` }}
+    >
+      {/* Consistent 4/5 portrait aspect on every card, every breakpoint */}
+      <div className="relative aspect-[4/5] overflow-hidden bg-beige">
+        {showImage ? (
+          <img
+            src={image}
+            alt={title}
+            className="w-full h-full object-cover img-zoom"
+            loading="lazy"
+            onError={() => setBroken(true)}
+          />
+        ) : (
+          <div className="w-full h-full flex flex-col items-center justify-center text-muted-brand p-4">
+            <span className="text-sm font-bold text-charcoal/80 text-center mb-1">
+              {title}
+            </span>
+            <span className="text-[10px] text-muted-brand text-center">
+              {subtitle}
+            </span>
+          </div>
+        )}
+        {/* Subtle gradient overlay so the cream/white text reads on any image */}
+        <div className="absolute inset-0 bg-gradient-to-t from-charcoal/65 via-charcoal/15 to-transparent" />
+        {/* Title overlay — sits consistently at the bottom of every card */}
+        <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5 text-cream">
+          <p className="text-[11px] text-cream/75 mb-1 font-light">{subtitle}</p>
+          <h3 className="text-base sm:text-lg font-bold mb-2 text-cream">
+            {title}
+          </h3>
+          <span className="inline-flex items-center gap-1.5 text-[11px] text-cream/90 border-b border-cream/40 pb-0.5 group-hover:border-cream group-hover:gap-2.5 transition-all duration-300">
+            تصفحي
+            <ArrowLeft className="h-3 w-3 transition-transform duration-300 group-hover:-translate-x-1" />
+          </span>
+        </div>
+      </div>
+    </button>
   );
 }
