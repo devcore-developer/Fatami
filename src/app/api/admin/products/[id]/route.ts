@@ -1,8 +1,9 @@
 // src/app/api/admin/products/[id]/route.ts
 // PUT    : updates an existing product — scalar fields + full replace of
 //          images (in the new order, first = primary) and sizes.
-//          Only image URLS are stored; binaries live in public/uploads
-//          (uploaded via /api/admin/upload), never in the database.
+//          The client-sent slug is IGNORED so existing product URLs keep
+//          working, and newArrival is ignored (feature removed, column
+//          stays frozen to avoid a migration).
 // DELETE : removes the product and explicitly wipes its images/sizes rows
 //          first, so it works with or without onDelete: Cascade.
 
@@ -23,22 +24,23 @@ export async function PUT(req: NextRequest, ctx: Ctx) {
     const { id } = await ctx.params;
     const body = await req.json();
 
-    // The client sends the whole product object (incl. relation objects and
-    // metadata). Strip everything that is not a real column, otherwise
-    // Prisma throws "Unknown argument".
+    // Strip relation objects / metadata / removed fields so Prisma only
+    // receives real scalar columns.
     const {
       id: _id,
       images,
       sizes,
+      slug: _slug,
+      newArrival: _newArrival,
       category: _category,
       createdAt: _createdAt,
       updatedAt: _updatedAt,
       ...rest
     } = body;
 
-    if (!rest.slug || !rest.nameAr || rest.price == null) {
+    if (!rest.nameAr || rest.price == null) {
       return NextResponse.json(
-        { success: false, error: "الاسم، الـ slug، والسعر مطلوبة" },
+        { success: false, error: "الاسم العربي والسعر مطلوبان" },
         { status: 400 }
       );
     }

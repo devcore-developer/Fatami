@@ -38,7 +38,7 @@ import {
 const ALL_SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
 
 // Must mirror the limits enforced by /api/admin/upload
-const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_SIZE = 4 * 1024 * 1024; // 4MB — نفس حد السيرفر
 const OK_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 type ProductImage = { id?: string; url: string; alt?: string };
@@ -177,7 +177,7 @@ function ImagesEditor({
       if (f.size > MAX_SIZE) {
         toast({
           title: "الملف كبير جدًا",
-          description: `"${f.name}" — الحد الأقصى 5MB للصورة`,
+          description: `"${f.name}" — الحد الأقصى 4MB للصورة`,
           variant: "destructive",
         });
         continue;
@@ -287,7 +287,7 @@ function ImagesEditor({
           <ImagePlus className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
           <p className="text-sm font-medium">اسحب الصور هنا أو اضغط للاختيار</p>
           <p className="text-xs text-muted-foreground mt-1">
-            JPG أو PNG أو WEBP — حتى 5MB لكل صورة — يمكنك اختيار أكثر من صورة
+            JPG أو PNG أو WEBP — حتى 4MB لكل صورة — يمكنك اختيار أكثر من صورة
           </p>
         </button>
       ) : (
@@ -461,7 +461,6 @@ export function ProductsSection() {
 
   const openNew = () => {
     setEditing({
-      slug: "",
       name: "",
       nameAr: "",
       description: "",
@@ -471,7 +470,6 @@ export function ProductsSection() {
       images: [],
       sizes: ALL_SIZES.map((s) => ({ size: s, stock: 0 })),
       featured: false,
-      newArrival: false,
       bestSeller: false,
       active: true,
       trackStock: true,
@@ -495,10 +493,10 @@ export function ProductsSection() {
   };
 
   const save = async () => {
-    if (!editing.slug || !editing.nameAr || editing.price == null) {
+    if (!editing.nameAr || editing.price == null) {
       toast({
         title: "بيانات ناقصة",
-        description: "الـ slug، الاسم العربي، والسعر مطلوبة",
+        description: "الاسم العربي والسعر مطلوبان",
         variant: "destructive",
       });
       return;
@@ -673,7 +671,7 @@ export function ProductsSection() {
                       prev ? { ...prev, images: updater(prev.images ?? []) } : prev
                     )
                   }
-                  altBase={editing.nameAr || editing.slug || "صورة منتج"}
+                  altBase={editing.nameAr || "صورة منتج"}
                   onUploadingCountChange={setUploadingCount}
                 />
               </div>
@@ -686,10 +684,7 @@ export function ProductsSection() {
                   <Input value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} className="h-10" dir="ltr" />
                 </Field>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <Field label="الـ Slug *">
-                  <Input value={editing.slug} onChange={(e) => setEditing({ ...editing, slug: e.target.value })} className="h-10" dir="ltr" placeholder="noir-silk-abaya" />
-                </Field>
+              <div>
                 <Field label="الفئة">
                   <Select value={editing.categoryId} onValueChange={(v) => setEditing({ ...editing, categoryId: v })}>
                     <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
@@ -700,6 +695,9 @@ export function ProductsSection() {
                     </SelectContent>
                   </Select>
                 </Field>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  الرابط (slug) بيتولد تلقائيًا من اسم المنتج — وللمنتجات القديمة بيتحفظ زي ما هو.
+                </p>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <Field label="السعر (د.ك) *">
@@ -746,11 +744,10 @@ export function ProductsSection() {
                 </div>
               </div>
 
-              {/* Flags */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 border-t border-border pt-4">
+              {/* Flags — "وصل حديثاً" removed by design */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 border-t border-border pt-4">
                 <Toggle label="نشط" checked={editing.active} onChange={(v) => setEditing({ ...editing, active: v })} />
                 <Toggle label="مميز" checked={editing.featured} onChange={(v) => setEditing({ ...editing, featured: v })} />
-                <Toggle label="وصل حديثاً" checked={editing.newArrival} onChange={(v) => setEditing({ ...editing, newArrival: v })} />
                 <Toggle label="الأكثر مبيعاً" checked={editing.bestSeller} onChange={(v) => setEditing({ ...editing, bestSeller: v })} />
               </div>
 
