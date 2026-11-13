@@ -1,19 +1,17 @@
 ﻿// src/app/api/admin/upload/route.ts
-// UPLOAD-ROUTE-V3 — Cloudflare R2 edition.
+// UPLOAD-ROUTE-V3.1 — Cloudflare R2 edition.
 //
-// The app runs on serverless hosting (AWS Lambda — the EROFS error at
-// /var/task/public/uploads proved it) where the filesystem is READ-ONLY
-// and ephemeral, so writing to public/uploads can never work in production.
-// Files now go to Cloudflare R2 and only the public URL is returned.
-// Same request/response contract as V2, so the admin UI needs no changes.
+// Serverless filesystems are read-only, so files go to Cloudflare R2 and
+// only the public URL is returned/stored. Same contract as before, so the
+// admin UI needs no changes.
+// Note: reads R2_BUCKET or R2_BUCKET_NAME (both spellings accepted).
 
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentAdmin } from "@/lib/admin-auth";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { randomBytes } from "crypto";
 
-// 4MB keeps the multipart request safely under the ~4.5MB serverless
-// body limit (Vercel & similar platforms reject bigger payloads with 413)
+// 4MB keeps the multipart request safely under the ~4.5MB serverless body limit
 const MAX_SIZE = 4 * 1024 * 1024;
 
 const EXT_BY_MIME: Record<string, string> = {
@@ -28,7 +26,8 @@ function getR2Config() {
   const accountId = process.env.R2_ACCOUNT_ID;
   const accessKeyId = process.env.R2_ACCESS_KEY_ID;
   const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
-  const bucket = process.env.R2_BUCKET;
+  // Accept both spellings so existing configs keep working
+  const bucket = process.env.R2_BUCKET || process.env.R2_BUCKET_NAME;
   const publicBase = (process.env.R2_PUBLIC_URL || process.env.R2_CUSTOM_DOMAIN || "")
     .trim()
     .replace(/\/+$/, "");
@@ -73,7 +72,7 @@ export async function GET() {
   const cfg = getR2Config();
   return NextResponse.json({
     success: true,
-    message: "UPLOAD-ROUTE-V3 (R2) is live",
+    message: "UPLOAD-ROUTE-V3.1 (R2) is live",
     configured: cfg.ok,
     ...(cfg.ok ? {} : { missingEnvVars: cfg.missing }),
   });
@@ -154,7 +153,7 @@ export async function POST(req: NextRequest) {
     if (status === 401 || status === 403) {
       message = "R2 رفض الطلب — اتأكد من R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY وإن التوكن فيه صلاحية Object Read & Write";
     } else if (status === 404 || err?.name === "NoSuchBucket") {
-      message = "البكت مش موجود — اتأكد من R2_BUCKET";
+      message = "البكت مش موجود — اتأكد من اسم R2_BUCKET_NAME (الحروف الصغيرة) وإن التوكن مربوط بنفس البكت";
     }
     return NextResponse.json(
       { success: false, error: `Upload failed: ${message}` },
