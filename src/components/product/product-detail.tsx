@@ -12,10 +12,6 @@ import {
   Ruler,
   Minus,
   Plus,
-  Truck,
-  RefreshCcw,
-  Shield,
-  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -156,11 +152,6 @@ export function ProductDetail() {
           {/* Info */}
           <div className="lg:py-4">
             <div className="mb-6">
-              {product.newArrival && (
-                <span className="text-xs tracking-luxe uppercase text-muted-foreground mb-2 block">
-                  وصل حديثاً
-                </span>
-              )}
               <h1 className="text-3xl sm:text-4xl font-bold mb-4 leading-tight">
                 {product.nameAr}
               </h1>
@@ -267,13 +258,6 @@ export function ProductDetail() {
               </button>
             </div>
 
-            {/* Trust badges */}
-            <div className="grid grid-cols-3 gap-2 mb-8 text-center">
-              <Trust icon={<Truck className="h-5 w-5" />} title="شحن سريع" subtitle="1-3 أيام" />
-              <Trust icon={<RefreshCcw className="h-5 w-5" />} title="إرجاع مجاني" subtitle="خلال 7 أيام" />
-              <Trust icon={<Shield className="h-5 w-5" />} title="دفع آمن" subtitle="WAMD / بنكي" />
-            </div>
-
             {/* Accordion */}
             <div className="border-t border-border">
               <Accordion
@@ -323,34 +307,14 @@ export function ProductDetail() {
                 }
               >
                 <ul className="text-sm text-muted-foreground space-y-2">
-                  <li>• الشحن داخل الكويت خلال 1-3 أيام عمل</li>
+                  <li>• الشحن داخل الكويت خلال 7-10 أيام عمل</li>
                   <li>• رسوم الشحن حسب منطقة التوصيل (تُحدّد عند الدفع)</li>
-                  <li>• الدفع عبر WAMD أو تحويل بنكي</li>
-                  <li>• إرجاع واستبدال مجاني خلال 7 أيام</li>
                 </ul>
               </Accordion>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-function Trust({
-  icon,
-  title,
-  subtitle,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  subtitle: string;
-}) {
-  return (
-    <div className="flex flex-col items-center gap-1 py-3 border border-border">
-      <span className="text-foreground">{icon}</span>
-      <span className="text-xs font-medium">{title}</span>
-      <span className="text-[10px] text-muted-foreground">{subtitle}</span>
     </div>
   );
 }
