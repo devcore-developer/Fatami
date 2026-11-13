@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,7 +19,21 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, FolderTree, X, AlertTriangle } from "lucide-react";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  FolderTree,
+  X,
+  AlertTriangle,
+  ImagePlus,
+  Loader2,
+  RefreshCw,
+} from "lucide-react";
+
+// Must mirror the limits enforced by /api/admin/upload
+const MAX_SIZE = 4 * 1024 * 1024; // 4MB
+const OK_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 interface CategoryRow {
   id: string;
@@ -38,6 +52,12 @@ export function CategoriesSection() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<CategoryRow | null>(null);
   const [form, setForm] = useState({ name: "", nameAr: "", slug: "", image: "", active: true, sortOrder: 0 });
+  // Single-image upload state (same mechanism as product images: /api/admin/upload → R2)
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const lastFileRef = useRef<File | null>(null);
   // Reassign-then-delete flow state.
   const [reassign, setReassign] = useState<{ category: CategoryRow | null; targetId: string; count: number } | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -47,7 +67,7 @@ export function CategoriesSection() {
     setLoading(true);
     try {
       const res = await fetch("/api/admin/categories");
-      const json = await res.json().catch(() => ({ success: false, error: "DELETE_FAILED" }));
+      const json = await res.json().catch(() => ({ success: false, error: "REQUEST_FAILED" }));
       if (json.success) setCategories(json.data);
     } finally {
       setLoading(false);
@@ -59,6 +79,8 @@ export function CategoriesSection() {
   const openNew = () => {
     setEditing(null);
     setForm({ name: "", nameAr: "", slug: "", image: "", active: true, sortOrder: categories.length });
+    setUploadError(null);
+    setUploading(false);
     setShowForm(true);
   };
 
@@ -72,12 +94,74 @@ export function CategoriesSection() {
       active: c.active,
       sortOrder: c.sortOrder ?? 0,
     });
+    setUploadError(null);
+    setUploading(false);
     setShowForm(true);
+  };
+
+  // Upload the picked file right away — the returned R2 URL is the permanent
+  // one that gets saved with the category. No blob/temporary URLs are stored.
+  const startUpload = (file: File) => {
+    if (!OK_TYPES.includes(file.type)) {
+      toast({ title: "نوع غير مدعوم", description: "مسموح فقط JPG / PNG / WEBP", variant: "destructive" });
+      return;
+    }
+    if (file.size > MAX_SIZE) {
+      toast({ title: "الملف كبير جدًا", description: "الحد الأقصى 4MB للصورة", variant: "destructive" });
+      return;
+    }
+    lastFileRef.current = file;
+    setUploadError(null);
+    setUploading(true);
+    setUploadProgress(0);
+
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("folder", "categories"); // stored under categories/ in the same R2 bucket
+
+    // XHR instead of fetch so we get real upload progress events
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/api/admin/upload");
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) setUploadProgress(Math.round((e.loaded / e.total) * 100));
+    };
+    xhr.onload = () => {
+      let json: any = null;
+      try {
+        json = JSON.parse(xhr.responseText || "{}");
+      } catch {
+        json = null;
+      }
+      setUploading(false);
+      if (xhr.status >= 200 && xhr.status < 300 && json?.success && json?.data?.url) {
+        setForm((f) => ({ ...f, image: json.data.url }));
+      } else {
+        setUploadError(json?.error || `فشل الرفع (كود ${xhr.status})`);
+      }
+    };
+    xhr.onerror = () => {
+      setUploading(false);
+      setUploadError("تعذر الاتصال بخادم الرفع");
+    };
+    xhr.onabort = () => {
+      setUploading(false);
+      setUploadError("تم إلغاء الرفع");
+    };
+    xhr.send(fd);
+  };
+
+  const retryUpload = () => {
+    const f = lastFileRef.current;
+    if (f) startUpload(f);
   };
 
   const save = async () => {
     if (!form.slug || !form.nameAr) {
       toast({ title: "بيانات ناقصة", description: "الاسم العربي والـ slug مطلوبة", variant: "destructive" });
+      return;
+    }
+    if (uploading) {
+      toast({ title: "الرفع لسه شغال", description: "استني الصورة تخلص رفع الأول وبعدين احفظي", variant: "destructive" });
       return;
     }
     const method = editing ? "PUT" : "POST";
@@ -88,7 +172,7 @@ export function CategoriesSection() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
-    const json = await res.json().catch(() => ({ success: false, error: "DELETE_FAILED" }));
+    const json = await res.json().catch(() => ({ success: false, error: "REQUEST_FAILED" }));
     if (json.success) {
       toast({ title: editing ? "تم التحديث" : "تمت الإضافة" });
       setShowForm(false);
@@ -101,16 +185,15 @@ export function CategoriesSection() {
   };
 
   const remove = async (c: CategoryRow) => {
-    // Fast path: try delete. If the category has products the API returns
-    // HTTP 409 with `error: "reassign-required"` + productCount, and we open
-    // the reassign dialog instead of failing flat.
+    // The remove route answers 400 + needsReassign + productsCount when the
+    // category is not empty — open the reassign dialog in that case.
     const res = await fetch(`/api/admin/categories/remove?id=${c.id}`, { method: "DELETE" });
-    const json = await res.json().catch(() => ({ success: false, error: "DELETE_FAILED" }));
+    const json = await res.json().catch(() => ({ success: false, error: "REQUEST_FAILED" }));
     if (json.success) {
       toast({ title: "تم الحذف" });
       void load();
-    } else if (res.status === 409 && json.error === "reassign-required") {
-      setReassign({ category: c, targetId: "", count: json.productCount ?? 0 });
+    } else if (json.needsReassign) {
+      setReassign({ category: c, targetId: "", count: json.productsCount ?? 0 });
     } else {
       toast({ title: "تعذّر الحذف", description: json.error, variant: "destructive" });
     }
@@ -120,15 +203,16 @@ export function CategoriesSection() {
     if (!reassign?.category || !reassign.targetId) return;
     setDeleting(true);
     try {
+      // Reassign goes through the same remove route (one transaction there)
       const res = await fetch(
-        `/api/admin/categories?id=${reassign.category.id}&reassignTo=${reassign.targetId}`,
+        `/api/admin/categories/remove?id=${reassign.category.id}&reassignTo=${reassign.targetId}`,
         { method: "DELETE" }
       );
-      const json = await res.json().catch(() => ({ success: false, error: "DELETE_FAILED" }));
+      const json = await res.json().catch(() => ({ success: false, error: "REQUEST_FAILED" }));
       if (json.success) {
         toast({
           title: "تم الحذف",
-          description: `نُقلت ${json.reassigned ?? 0} منتج إلى الفئة البديلة`,
+          description: `نُقلت ${json.data?.movedProducts ?? 0} منتج إلى الفئة البديلة`,
         });
         setReassign(null);
         void load();
@@ -236,21 +320,81 @@ export function CategoriesSection() {
                 />
               </Field>
             </div>
-            <Field label="رابط الصورة">
-              <Input value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} className="h-10" dir="ltr" placeholder="https://..." />
-            </Field>
-            {form.image && (
-              <div className="relative h-32 w-full overflow-hidden border border-border">
-                <img src={form.image} alt="preview" className="w-full h-full object-cover" />
+
+            {/* Image — real upload via /api/admin/upload (R2), no manual URL */}
+            <Field label="صورة الفئة">
+              <input
+                ref={inputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) startUpload(f);
+                  e.target.value = "";
+                }}
+              />
+              {form.image ? (
+                <div className="relative h-40 w-full overflow-hidden border border-border bg-secondary">
+                  <img src={form.image} alt="معاينة صورة الفئة" className="w-full h-full object-cover" />
+                  {uploading && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background/70">
+                      <Loader2 className="h-5 w-5 animate-spin text-charcoal" />
+                      <span className="text-xs font-medium">جاري رفع الصورة الجديدة {uploadProgress}%</span>
+                      <div className="h-1 w-3/4 bg-secondary overflow-hidden">
+                        <div className="h-full bg-charcoal transition-all" style={{ width: `${uploadProgress}%` }} />
+                      </div>
+                    </div>
+                  )}
+                  {!uploading && (
+                    <button
+                      type="button"
+                      title="إزالة الصورة"
+                      onClick={() => setForm({ ...form, image: "" })}
+                      className="absolute top-1 right-1 h-7 w-7 bg-black/80 text-white flex items-center justify-center hover:bg-black"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
+              ) : uploading ? (
+                <div className="w-full h-40 border border-dashed border-border bg-secondary/20 flex flex-col items-center justify-center gap-2">
+                  <Loader2 className="h-5 w-5 animate-spin text-charcoal" />
+                  <span className="text-xs font-medium">جاري الرفع {uploadProgress}%</span>
+                  <div className="h-1 w-3/4 bg-secondary overflow-hidden">
+                    <div className="h-full bg-charcoal transition-all" style={{ width: `${uploadProgress}%` }} />
+                  </div>
+                </div>
+              ) : (
                 <button
                   type="button"
-                  onClick={() => setForm({ ...form, image: "" })}
-                  className="absolute top-1 right-1 h-6 w-6 bg-black text-white flex items-center justify-center"
+                  onClick={() => inputRef.current?.click()}
+                  className="w-full h-40 border border-dashed border-border hover:border-charcoal hover:bg-secondary/40 flex flex-col items-center justify-center gap-1 text-muted-foreground transition-colors"
                 >
-                  <X className="h-3 w-3" />
+                  <ImagePlus className="h-6 w-6" />
+                  <span className="text-sm font-medium">اضغطي لاختيار صورة الفئة</span>
+                  <span className="text-xs">JPG أو PNG أو WEBP — حتى 4MB</span>
                 </button>
-              </div>
-            )}
+              )}
+              {uploadError && (
+                <div className="flex items-center justify-between gap-2 mt-2 p-2 border border-destructive/40 bg-destructive/5 text-xs text-destructive">
+                  <span className="line-clamp-2">{uploadError}</span>
+                  <button
+                    type="button"
+                    onClick={retryUpload}
+                    className="h-7 w-7 shrink-0 flex items-center justify-center hover:bg-destructive/10"
+                    title="إعادة المحاولة"
+                  >
+                    <RefreshCw className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              )}
+              <p className="text-[11px] text-muted-foreground mt-1">
+                الصورة بتترفع فورًا على نفس تخزين الموقع وبتتحفظ مع الفئة لما تضغطي حفظ.
+                لو الفئة عندها صورة قديمة، الرفع الجديد بيستبدلها عند الحفظ.
+              </p>
+            </Field>
+
             <div className="flex items-center justify-between border-t border-border pt-4">
               <Label className="text-sm">نشط (يظهر في الواجهة الأمامية)</Label>
               <Switch checked={form.active} onCheckedChange={(v) => setForm({ ...form, active: v })} />
@@ -259,7 +403,9 @@ export function CategoriesSection() {
               <Button variant="outline" onClick={() => { setShowForm(false); setEditing(null); }}>
                 إلغاء
               </Button>
-              <Button onClick={save}>{editing ? "حفظ التعديلات" : "إضافة"}</Button>
+              <Button onClick={save} disabled={uploading}>
+                {editing ? "حفظ التعديلات" : "إضافة"}
+              </Button>
             </div>
           </div>
         </DialogContent>

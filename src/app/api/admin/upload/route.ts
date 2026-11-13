@@ -1,10 +1,12 @@
 ﻿// src/app/api/admin/upload/route.ts
-// UPLOAD-ROUTE-V3.1 — Cloudflare R2 edition.
+// UPLOAD-ROUTE-V3.2 — Cloudflare R2 edition.
 //
 // Serverless filesystems are read-only, so files go to Cloudflare R2 and
-// only the public URL is returned/stored. Same contract as before, so the
-// admin UI needs no changes.
-// Note: reads R2_BUCKET or R2_BUCKET_NAME (both spellings accepted).
+// only the public URL is returned/stored.
+// V3.2: optional "folder" form field, whitelisted to products/categories.
+// Product images keep landing in products/ (field omitted = products),
+// category images go to categories/. Same bucket, same single upload
+// mechanism — no duplicated uploader anywhere in the codebase.
 
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentAdmin } from "@/lib/admin-auth";
@@ -13,6 +15,9 @@ import { randomBytes } from "crypto";
 
 // 4MB keeps the multipart request safely under the ~4.5MB serverless body limit
 const MAX_SIZE = 4 * 1024 * 1024;
+
+// Whitelist: no arbitrary path segments can reach the bucket key
+const ALLOWED_FOLDERS = new Set(["products", "categories"]);
 
 const EXT_BY_MIME: Record<string, string> = {
   "image/jpeg": "jpg",
@@ -72,7 +77,7 @@ export async function GET() {
   const cfg = getR2Config();
   return NextResponse.json({
     success: true,
-    message: "UPLOAD-ROUTE-V3.1 (R2) is live",
+    message: "UPLOAD-ROUTE-V3.2 (R2) is live",
     configured: cfg.ok,
     ...(cfg.ok ? {} : { missingEnvVars: cfg.missing }),
   });
@@ -128,8 +133,13 @@ export async function POST(req: NextRequest) {
 
     const bytes = Buffer.from(await file.arrayBuffer());
 
-    // Unique key, grouped in a products/ folder inside the bucket
-    const key = `products/${Date.now()}-${randomBytes(6).toString("hex")}.${ext}`;
+    // Optional destination folder — defaults to products/ so existing
+    // callers (product images) are untouched. Only whitelisted values pass.
+    const folderRaw = (formData.get("folder") || "products").toString();
+    const folder = ALLOWED_FOLDERS.has(folderRaw) ? folderRaw : "products";
+
+    // Unique key inside the bucket
+    const key = `${folder}/${Date.now()}-${randomBytes(6).toString("hex")}.${ext}`;
 
     const client = getClient(cfg.endpoint, cfg.accessKeyId, cfg.secretAccessKey);
     await client.send(
