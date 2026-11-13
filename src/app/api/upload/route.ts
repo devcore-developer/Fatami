@@ -1,16 +1,21 @@
-// ─── src/app/api/admin/upload/route.ts ───
-// راوت رفع الصور (اللوجو، صور الهيرو، صور المنتجات).
-// بيكتب الملفات في public/uploads على الجهاز محلياً، وبيعمل الفولدر
-// تلقائياً لو مش موجود — ده كان السبب الأشهر لفشل الرفع بـ 500.
-// ولو حصل خطأ، بيطبع السبب الحقيقي في الترمنال تحت سطر UPLOAD ERROR.
+// src/app/api/upload/route.ts
+// TRANSFER-UPLOAD-V3 — Cloudflare R2 edition.
+// Customer-facing upload for bank-transfer screenshots during checkout
+// (stored on the Order as transferScreenshot). This is the PUBLIC sibling
+// of /api/admin/upload — it must NOT require admin auth, because customers
+// upload while placing an order.
+// The old version wrote to public/uploads, which is impossible on Vercel
+// serverless (EROFS: read-only file system at /var/task/...). Files now go
+// to the same R2 bucket under transfers/ and only the public URL is
+// returned. Accepts "file", "screenshot" or "image" as the FormData field
+// so any existing checkout form keeps working without changes.
 
 import { NextRequest, NextResponse } from "next/server";
-import { getCurrentAdmin } from "@/lib/admin-auth";
-import { mkdir, writeFile } from "fs/promises";
-import path from "path";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { randomBytes } from "crypto";
 
-const MAX_SIZE = 5 * 1024 * 1024; // 5 ميجابايت
+// 4MB keeps the request safely under the ~4.5MB serverless body limit
+const MAX_SIZE = 4 * 1024 * 1024;
 
 const EXT_BY_MIME: Record<string, string> = {
   "image/jpeg": "jpg",
@@ -18,38 +23,94 @@ const EXT_BY_MIME: Record<string, string> = {
   "image/webp": "webp",
 };
 
-// GET — اختبار سريع للتأكد إن الراوت الجديد شغال:
-// افتحي http://localhost:3000/api/admin/upload في المتصفح،
-// لو ظهرت رسالة JSON اللي تحت يبقى الملف اتستبدل واتسيف صح.
+let cachedClient: S3Client | null = null;
+
+function getR2Config() {
+  const accountId = process.env.R2_ACCOUNT_ID;
+  const accessKeyId = process.env.R2_ACCESS_KEY_ID;
+  const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
+  // Accept both spellings so existing configs keep working
+  const bucket = process.env.R2_BUCKET || process.env.R2_BUCKET_NAME;
+  const publicBase = (process.env.R2_PUBLIC_URL || process.env.R2_CUSTOM_DOMAIN || "")
+    .trim()
+    .replace(/\/+$/, "");
+
+  const entries: Array<[string, string | undefined]> = [
+    ["R2_ACCOUNT_ID", accountId],
+    ["R2_ACCESS_KEY_ID", accessKeyId],
+    ["R2_SECRET_ACCESS_KEY", secretAccessKey],
+    ["R2_BUCKET", bucket],
+    ["R2_PUBLIC_URL", publicBase || undefined],
+  ];
+  const missing = entries.filter(([, v]) => !v).map(([k]) => k);
+  if (missing.length > 0) {
+    return { ok: false as const, missing };
+  }
+  return {
+    ok: true as const,
+    endpoint:
+      process.env.R2_ENDPOINT ||
+      `https://${accountId}.r2.cloudflarestorage.com`,
+    accessKeyId: accessKeyId!,
+    secretAccessKey: secretAccessKey!,
+    bucket: bucket!,
+    publicBase,
+  };
+}
+
+// Reuse one client across invocations (helps cold starts)
+function getClient(endpoint: string, accessKeyId: string, secretAccessKey: string) {
+  if (!cachedClient) {
+    cachedClient = new S3Client({
+      region: "auto",
+      endpoint,
+      credentials: { accessKeyId, secretAccessKey },
+    });
+  }
+  return cachedClient;
+}
+
+// GET — liveness + config check: open /api/upload in the browser
 export async function GET() {
+  const cfg = getR2Config();
   return NextResponse.json({
     success: true,
-    message: "UPLOAD-ROUTE-V2 شغال ✅ — لو بتشوفي الرسالة دي يبقى الراوت الجديد فعال",
+    message: "TRANSFER-UPLOAD-V3 (R2) is live",
+    configured: cfg.ok,
+    ...(cfg.ok ? {} : { missingEnvVars: cfg.missing }),
   });
 }
 
 export async function POST(req: NextRequest) {
-  // التأكد من تسجيل دخول الأدمن
-  const user = await getCurrentAdmin();
-  if (!user) {
-    return NextResponse.json({ success: false, error: "غير مصرح" }, { status: 401 });
+  const cfg = getR2Config();
+  if (!cfg.ok) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: `التخزين السحابي (R2) مش متظبط — متغيرات ناقصة: ${cfg.missing.join(", ")}`,
+      },
+      { status: 500 }
+    );
   }
 
   try {
     const formData = await req.formData();
-    const file = formData.get("file");
+    // The checkout form sends the screenshot under "file"; accept the
+    // common alternatives too so nothing breaks either way.
+    const raw =
+      formData.get("file") || formData.get("screenshot") || formData.get("image");
+    const file = raw instanceof File ? raw : null;
 
-    if (!file || typeof file === "string") {
+    if (!file) {
       return NextResponse.json(
-        { success: false, error: "لم يتم اختيار ملف" },
+        { success: false, error: "لم يتم اختيار صورة" },
         { status: 400 }
       );
     }
 
-    // تحديد الامتداد من نوع الملف، أو من اسم الملف لو المتصفح ما بعتش type
     let ext = EXT_BY_MIME[file.type];
     if (!ext) {
-      const nameExt = file.name.split(".").pop()?.toLowerCase();
+      const nameExt = file.name?.split(".").pop()?.toLowerCase();
       if (nameExt === "jpeg") ext = "jpg";
       else if (nameExt === "jpg" || nameExt === "png" || nameExt === "webp") ext = nameExt;
     }
@@ -62,31 +123,42 @@ export async function POST(req: NextRequest) {
 
     if (file.size > MAX_SIZE) {
       return NextResponse.json(
-        { success: false, error: "حجم الصورة كبير — الحد الأقصى 5 ميجابايت" },
+        { success: false, error: "حجم الصورة كبير — الحد الأقصى 4 ميجابايت" },
         { status: 400 }
       );
     }
 
     const bytes = Buffer.from(await file.arrayBuffer());
 
-    // اسم فريد لكل ملف عشان الصور الجديدة ما تطمحش على القديمة
-    const filename = `${Date.now()}-${randomBytes(6).toString("hex")}.${ext}`;
+    // Unique key, grouped in a transfers/ folder inside the same bucket
+    const key = `transfers/${Date.now()}-${randomBytes(6).toString("hex")}.${ext}`;
 
-    // الفولدر بيتعمل تلقائياً لو مش موجود (recursive: true)
-    const uploadsDir = path.join(process.cwd(), "public", "uploads");
-    await mkdir(uploadsDir, { recursive: true });
-    await writeFile(path.join(uploadsDir, filename), bytes);
+    const client = getClient(cfg.endpoint, cfg.accessKeyId, cfg.secretAccessKey);
+    await client.send(
+      new PutObjectCommand({
+        Bucket: cfg.bucket,
+        Key: key,
+        Body: bytes,
+        ContentType: file.type || `image/${ext === "jpg" ? "jpeg" : ext}`,
+        CacheControl: "public, max-age=31536000, immutable",
+      })
+    );
 
-    return NextResponse.json({
-      success: true,
-      data: { url: `/uploads/${filename}` },
-    });
-  } catch (err) {
-    // اطبع الخطأ الحقيقي في الترمنال — دي هي تفاصيل سبب الفشل
-    console.error("UPLOAD ERROR:", err);
-    const message = err instanceof Error ? err.message : "خطأ غير معروف";
+    const url = `${cfg.publicBase}/${key}`;
+    // data.url is the canonical shape; top-level url kept as a safety net
+    // for older checkout code that may read json.url directly.
+    return NextResponse.json({ success: true, data: { url }, url });
+  } catch (err: any) {
+    console.error("TRANSFER UPLOAD ERROR:", err);
+    let message = err?.message ?? "Unknown error";
+    const status = err?.$metadata?.httpStatusCode;
+    if (status === 401 || status === 403) {
+      message = "R2 رفض الطلب — راجع مفاتيح R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY";
+    } else if (status === 404 || err?.name === "NoSuchBucket") {
+      message = "البكت مش موجود — راجع R2_BUCKET_NAME";
+    }
     return NextResponse.json(
-      { success: false, error: `فشل رفع الملف: ${message}` },
+      { success: false, error: `فشل رفع الصورة: ${message}` },
       { status: 500 }
     );
   }
