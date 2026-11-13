@@ -1,6 +1,9 @@
 // Admin authentication helpers
-// Simple session-token based auth (HTTP-only cookie).
-// In production, pair with proper bcrypt password hashing.
+// Stateless signed-token sessions (HTTP-only cookie) — serverless-safe.
+// The old in-memory Map broke on Vercel: every Lambda instance has its own
+// memory, so sessions vanished between requests (random 401s).
+// The token now carries userId + expiry and is signed with HMAC-SHA256,
+// so ANY instance can verify it. No new dependencies, no migration.
 
 import { db } from "@/lib/db";
 import { cookies } from "next/headers";
@@ -11,8 +14,39 @@ const SESSION_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 
 // Demo password check. Replace the seeded passwordHash with a real bcrypt hash
 // generated from your chosen password, then swap this for bcrypt.compare.
-// For now we accept a known demo password to make the panel usable.
 const DEMO_PASSWORD = "admin123";
+
+// Set ADMIN_SESSION_SECRET on Vercel (any long random string).
+// The fallback keeps local dev working but must never be relied on in production.
+const SESSION_SECRET =
+  process.env.ADMIN_SESSION_SECRET ||
+  process.env.AUTH_SECRET ||
+  "fatami-dev-secret-change-me-in-production";
+
+function sign(payload: string): string {
+  return crypto.createHmac("sha256", SESSION_SECRET).update(payload).digest("hex");
+}
+
+function buildToken(userId: string, expiresMs: number): string {
+  const payload = `${userId}.${expiresMs}`;
+  return `${payload}.${sign(payload)}`;
+}
+
+function parseToken(token: string | undefined): { userId: string } | null {
+  if (!token) return null;
+  const parts = token.split(".");
+  if (parts.length !== 3) return null;
+  const [userId, expiresStr, signature] = parts;
+
+  const payload = `${userId}.${expiresStr}`;
+  const a = Buffer.from(signature);
+  const b = Buffer.from(sign(payload));
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
+
+  const expiresMs = Number(expiresStr);
+  if (!Number.isFinite(expiresMs) || Date.now() > expiresMs) return null;
+  return { userId };
+}
 
 export async function verifyAdmin(email: string, password: string) {
   const user = await db.adminUser.findUnique({ where: { email } });
@@ -24,39 +58,26 @@ export async function verifyAdmin(email: string, password: string) {
 }
 
 export async function createAdminSession(userId: string) {
-  const token = crypto.randomBytes(32).toString("hex");
-  const expires = new Date(Date.now() + SESSION_MAX_AGE * 1000);
-  // Store session in a lightweight in-memory map (persisted via cookie only).
-  // For production use a DB-backed Session model or JWT.
-  sessions.set(token, { userId, expires });
+  const expiresMs = Date.now() + SESSION_MAX_AGE * 1000;
+  const token = buildToken(userId, expiresMs);
   const store = await cookies();
   store.set(SESSION_COOKIE, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    expires,
+    expires: new Date(expiresMs),
   });
   return token;
 }
 
 export async function getAdminSession(): Promise<{ userId: string } | null> {
   const store = await cookies();
-  const token = store.get(SESSION_COOKIE)?.value;
-  if (!token) return null;
-  const session = sessions.get(token);
-  if (!session) return null;
-  if (session.expires < new Date()) {
-    sessions.delete(token);
-    return null;
-  }
-  return { userId: session.userId };
+  return parseToken(store.get(SESSION_COOKIE)?.value);
 }
 
 export async function destroyAdminSession() {
   const store = await cookies();
-  const token = store.get(SESSION_COOKIE)?.value;
-  if (token) sessions.delete(token);
   store.delete(SESSION_COOKIE);
 }
 
@@ -66,7 +87,3 @@ export async function getCurrentAdmin() {
   const user = await db.adminUser.findUnique({ where: { id: session.userId } });
   return user;
 }
-
-// In-memory session store (fine for single-instance deployment).
-// For multi-instance production, persist sessions in the DB.
-const sessions = new Map<string, { userId: string; expires: Date }>();
