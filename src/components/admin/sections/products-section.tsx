@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,9 +21,414 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { formatPrice } from "@/lib/format";
-import { Plus, Pencil, Trash2, X, Package } from "lucide-react";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  X,
+  Package,
+  ImagePlus,
+  Star,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  RefreshCw,
+} from "lucide-react";
 
 const ALL_SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
+
+// Must mirror the limits enforced by /api/admin/upload
+const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+const OK_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
+type ProductImage = { id?: string; url: string; alt?: string };
+
+type PendingImage = {
+  key: string;
+  file: File;
+  previewUrl: string;
+  progress: number;
+  status: "uploading" | "error";
+  error?: string;
+};
+
+// XHR instead of fetch so we get real upload progress events
+function uploadWithProgress(file: File, onProgress: (pct: number) => void): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/api/admin/upload");
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
+    };
+    xhr.onload = () => {
+      let json: any = null;
+      try {
+        json = JSON.parse(xhr.responseText || "{}");
+      } catch {
+        json = null;
+      }
+      if (xhr.status >= 200 && xhr.status < 300 && json?.success && json?.data?.url) {
+        resolve(json.data.url);
+      } else {
+        reject(new Error(json?.error || `فشل الرفع (كود ${xhr.status})`));
+      }
+    };
+    xhr.onerror = () => reject(new Error("تعذر الاتصال بخادم الرفع"));
+    xhr.onabort = () => reject(new Error("تم إلغاء الرفع"));
+
+    const fd = new FormData();
+    fd.append("file", file);
+    xhr.send(fd);
+  });
+}
+
+// ---------------------------------------------------------------------------
+// ImagesEditor — drag & drop + multi-file upload with progress, previews,
+// remove / reorder / make-primary. Works for both create and edit modes.
+// ---------------------------------------------------------------------------
+function ImagesEditor({
+  images,
+  onImagesChange,
+  altBase,
+  onUploadingCountChange,
+}: {
+  images: ProductImage[];
+  onImagesChange: (updater: (prev: ProductImage[]) => ProductImage[]) => void;
+  altBase: string;
+  onUploadingCountChange: (n: number) => void;
+}) {
+  const { toast } = useToast();
+  const [pending, setPending] = useState<PendingImage[]>([]);
+  const [dragOver, setDragOver] = useState(false);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const aliveRef = useRef(true);
+  const pendingRef = useRef<PendingImage[]>([]);
+  const removedRef = useRef<Set<string>>(new Set());
+  const altRef = useRef(altBase);
+
+  useEffect(() => {
+    pendingRef.current = pending;
+  }, [pending]);
+
+  useEffect(() => {
+    altRef.current = altBase;
+  }, [altBase]);
+
+  // Report how many uploads are still in flight (parent blocks Save)
+  useEffect(() => {
+    onUploadingCountChange(pending.filter((p) => p.status === "uploading").length);
+  }, [pending, onUploadingCountChange]);
+
+  // Cleanup when the editor dialog closes / component unmounts
+  useEffect(() => {
+    return () => {
+      aliveRef.current = false;
+      pendingRef.current.forEach((p) => URL.revokeObjectURL(p.previewUrl));
+      onUploadingCountChange(0);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const startUpload = useCallback(
+    (key: string, file: File) => {
+      (async () => {
+        try {
+          const url = await uploadWithProgress(file, (pct) => {
+            setPending((ps) =>
+              ps.map((p) => (p.key === key ? { ...p, progress: pct } : p))
+            );
+          });
+          if (!aliveRef.current || removedRef.current.has(key)) return;
+
+          const item = pendingRef.current.find((p) => p.key === key);
+          if (item) URL.revokeObjectURL(item.previewUrl);
+
+          setPending((ps) => ps.filter((p) => p.key !== key));
+          onImagesChange((prev) => [...prev, { url, alt: altRef.current }]);
+        } catch (err: any) {
+          if (!aliveRef.current || removedRef.current.has(key)) return;
+          setPending((ps) =>
+            ps.map((p) =>
+              p.key === key
+                ? { ...p, status: "error", error: err?.message ?? "فشل الرفع" }
+                : p
+            )
+          );
+        }
+      })();
+    },
+    [onImagesChange]
+  );
+
+  const addFiles = (fileList: FileList | File[] | null) => {
+    if (!fileList) return;
+    const files = Array.from(fileList);
+    if (files.length === 0) return;
+
+    for (const f of files) {
+      if (!OK_TYPES.includes(f.type)) {
+        toast({
+          title: "نوع غير مدعوم",
+          description: `"${f.name}" — مسموح فقط JPG / PNG / WEBP`,
+          variant: "destructive",
+        });
+        continue;
+      }
+      if (f.size > MAX_SIZE) {
+        toast({
+          title: "الملف كبير جدًا",
+          description: `"${f.name}" — الحد الأقصى 5MB للصورة`,
+          variant: "destructive",
+        });
+        continue;
+      }
+
+      const key = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      setPending((ps) => [
+        ...ps,
+        {
+          key,
+          file: f,
+          previewUrl: URL.createObjectURL(f),
+          progress: 0,
+          status: "uploading",
+        },
+      ]);
+      startUpload(key, f);
+    }
+  };
+
+  const removePending = (key: string) => {
+    removedRef.current.add(key);
+    const item = pendingRef.current.find((p) => p.key === key);
+    if (item) URL.revokeObjectURL(item.previewUrl);
+    setPending((ps) => ps.filter((p) => p.key !== key));
+  };
+
+  const retry = (item: PendingImage) => {
+    setPending((ps) =>
+      ps.map((p) =>
+        p.key === item.key
+          ? { ...p, status: "uploading", progress: 0, error: undefined }
+          : p
+      )
+    );
+    startUpload(item.key, item.file);
+  };
+
+  // --- mutations on committed (already uploaded) images ---
+  const removeAt = (i: number) =>
+    onImagesChange((prev) => prev.filter((_, idx) => idx !== i));
+
+  const makePrimary = (i: number) => {
+    if (i === 0) return;
+    onImagesChange((prev) => {
+      const next = [...prev];
+      const [item] = next.splice(i, 1);
+      next.unshift(item);
+      return next;
+    });
+  };
+
+  const moveEarlier = (i: number) => {
+    if (i === 0) return;
+    onImagesChange((prev) => {
+      const next = [...prev];
+      [next[i - 1], next[i]] = [next[i], next[i - 1]];
+      return next;
+    });
+  };
+
+  const moveLater = (i: number) => {
+    onImagesChange((prev) => {
+      if (i >= prev.length - 1) return prev;
+      const next = [...prev];
+      [next[i + 1], next[i]] = [next[i], next[i + 1]];
+      return next;
+    });
+  };
+
+  return (
+    <div
+      className={`space-y-3 transition-colors ${dragOver ? "ring-1 ring-charcoal" : ""}`}
+      onDragOver={(e) => {
+        e.preventDefault();
+        setDragOver(true);
+      }}
+      onDragLeave={() => setDragOver(false)}
+      onDrop={(e) => {
+        e.preventDefault();
+        setDragOver(false);
+        addFiles(e.dataTransfer.files);
+      }}
+    >
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        multiple
+        className="hidden"
+        onChange={(e) => {
+          addFiles(e.target.files);
+          e.target.value = "";
+        }}
+      />
+
+      {images.length === 0 && pending.length === 0 ? (
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          className={`w-full border border-dashed p-8 text-center transition-colors cursor-pointer ${
+            dragOver
+              ? "border-charcoal bg-secondary/60"
+              : "border-border bg-secondary/20 hover:bg-secondary/40"
+          }`}
+        >
+          <ImagePlus className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+          <p className="text-sm font-medium">اسحب الصور هنا أو اضغط للاختيار</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            JPG أو PNG أو WEBP — حتى 5MB لكل صورة — يمكنك اختيار أكثر من صورة
+          </p>
+        </button>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {/* Already uploaded images (existing + just uploaded) */}
+          {images.map((img, i) => (
+            <div
+              key={img.id ?? `${img.url}-${i}`}
+              className="border border-border bg-secondary/30"
+            >
+              <div className="relative aspect-[4/5] w-full overflow-hidden">
+                <img
+                  src={img.url}
+                  alt={img.alt ?? ""}
+                  className="h-full w-full object-cover"
+                />
+                {i === 0 && (
+                  <span className="absolute top-1 right-1 bg-charcoal text-cream text-[10px] px-1.5 py-0.5 flex items-center gap-1">
+                    <Star className="h-3 w-3" />
+                    رئيسية
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center justify-between px-1 py-1 border-t border-border">
+                <div className="flex items-center gap-0.5">
+                  <button
+                    type="button"
+                    title="اجعلها الصورة الرئيسية"
+                    disabled={i === 0}
+                    onClick={() => makePrimary(i)}
+                    className="h-7 w-7 flex items-center justify-center hover:bg-secondary disabled:opacity-30 disabled:hover:bg-transparent"
+                  >
+                    <Star className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    title="قدّم الصورة"
+                    disabled={i === 0}
+                    onClick={() => moveEarlier(i)}
+                    className="h-7 w-7 flex items-center justify-center hover:bg-secondary disabled:opacity-30 disabled:hover:bg-transparent"
+                  >
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    title="أخّر الصورة"
+                    disabled={i === images.length - 1}
+                    onClick={() => moveLater(i)}
+                    className="h-7 w-7 flex items-center justify-center hover:bg-secondary disabled:opacity-30 disabled:hover:bg-transparent"
+                  >
+                    <ChevronLeft className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  title="حذف الصورة"
+                  onClick={() => removeAt(i)}
+                  className="h-7 w-7 flex items-center justify-center hover:bg-secondary text-destructive"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+          ))}
+
+          {/* In-progress / failed uploads */}
+          {pending.map((p) => (
+            <div
+              key={p.key}
+              className={`border bg-secondary/30 ${
+                p.status === "error" ? "border-destructive" : "border-border"
+              }`}
+            >
+              <div className="relative aspect-[4/5] w-full overflow-hidden">
+                <img
+                  src={p.previewUrl}
+                  alt=""
+                  className={`h-full w-full object-cover ${p.status === "uploading" ? "opacity-60" : ""}`}
+                />
+                {p.status === "uploading" && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background/70">
+                    <Loader2 className="h-5 w-5 animate-spin text-charcoal" />
+                    <span className="text-xs font-medium">جاري الرفع {p.progress}%</span>
+                    <div className="h-1 w-3/4 bg-secondary overflow-hidden">
+                      <div
+                        className="h-full bg-charcoal transition-all"
+                        style={{ width: `${p.progress}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+                {p.status === "error" && (
+                  <div className="absolute inset-x-0 bottom-0 bg-destructive text-white text-[10px] px-2 py-1 break-words">
+                    {p.error}
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center justify-between px-1 py-1 border-t border-border">
+                {p.status === "error" ? (
+                  <button
+                    type="button"
+                    title="إعادة المحاولة"
+                    onClick={() => retry(p)}
+                    className="h-7 w-7 flex items-center justify-center hover:bg-secondary"
+                  >
+                    <RefreshCw className="h-3.5 w-3.5" />
+                  </button>
+                ) : (
+                  <span />
+                )}
+                <button
+                  type="button"
+                  title="إزالة"
+                  onClick={() => removePending(p.key)}
+                  className="h-7 w-7 flex items-center justify-center hover:bg-secondary text-destructive"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+          ))}
+
+          {/* Add more tile */}
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            className="aspect-[4/5] border border-dashed border-border hover:border-charcoal hover:bg-secondary/40 flex flex-col items-center justify-center gap-1 text-muted-foreground transition-colors"
+          >
+            <ImagePlus className="h-5 w-5" />
+            <span className="text-xs">إضافة صور</span>
+          </button>
+        </div>
+      )}
+
+      <p className="text-[11px] text-muted-foreground">
+        أول صورة هي الصورة الرئيسية اللي بتظهر في المتجر — الصور بتترفع فورًا
+        على السيرفر، وروابطها بتتحفظ مع المنتج لما تضغط حفظ.
+      </p>
+    </div>
+  );
+}
 
 export function ProductsSection() {
   const [products, setProducts] = useState<any[]>([]);
@@ -31,6 +436,7 @@ export function ProductsSection() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<any | null>(null);
   const [showEditor, setShowEditor] = useState(false);
+  const [uploadingCount, setUploadingCount] = useState(0);
   const { toast } = useToast();
 
   const load = useCallback(async () => {
@@ -49,7 +455,9 @@ export function ProductsSection() {
     }
   }, []);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   const openNew = () => {
     setEditing({
@@ -88,36 +496,83 @@ export function ProductsSection() {
 
   const save = async () => {
     if (!editing.slug || !editing.nameAr || editing.price == null) {
-      toast({ title: "بيانات ناقصة", description: "الـ slug، الاسم العربي، والسعر مطلوبة", variant: "destructive" });
+      toast({
+        title: "بيانات ناقصة",
+        description: "الـ slug، الاسم العربي، والسعر مطلوبة",
+        variant: "destructive",
+      });
       return;
     }
+    if (uploadingCount > 0) {
+      toast({
+        title: "الرفع لسه شغال",
+        description: "استنى الصور تخلص رفع الأول وبعدين احفظ",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const method = editing.id ? "PUT" : "POST";
     const url = editing.id ? `/api/admin/products/${editing.id}` : "/api/admin/products";
-    const res = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(editing),
-    });
-    const json = await res.json();
-    if (json.success) {
-      toast({ title: editing.id ? "تم التحديث" : "تم الإنشاء" });
-      setShowEditor(false);
-      setEditing(null);
-      void load();
-    } else {
-      toast({ title: "فشل الحفظ", description: json.error, variant: "destructive" });
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editing),
+      });
+      let json: any = null;
+      try {
+        json = JSON.parse(await res.text());
+      } catch {
+        json = null;
+      }
+      if (json?.success) {
+        toast({ title: editing.id ? "تم التحديث" : "تم الإنشاء" });
+        setShowEditor(false);
+        setEditing(null);
+        void load();
+      } else {
+        toast({
+          title: "فشل الحفظ",
+          description: json?.error || `خطأ من السيرفر (${res.status})`,
+          variant: "destructive",
+        });
+      }
+    } catch (err: any) {
+      toast({
+        title: "فشل الاتصال",
+        description: err?.message ?? "حصل خطأ غير متوقع",
+        variant: "destructive",
+      });
     }
   };
 
   const remove = async (p: any) => {
     if (!confirm(`حذف المنتج "${p.nameAr}"؟`)) return;
-    const res = await fetch(`/api/admin/products/${p.id}`, { method: "DELETE" });
-    const json = await res.json();
-    if (json.success) {
-      toast({ title: "تم الحذف" });
-      void load();
-    } else {
-      toast({ title: "فشل الحذف", description: json.error, variant: "destructive" });
+    try {
+      const res = await fetch(`/api/admin/products/${p.id}`, { method: "DELETE" });
+      let json: any = null;
+      try {
+        json = JSON.parse(await res.text());
+      } catch {
+        json = null;
+      }
+      if (json?.success) {
+        toast({ title: "تم الحذف" });
+        void load();
+      } else {
+        toast({
+          title: "فشل الحذف",
+          description: json?.error || `خطأ من السيرفر (${res.status})`,
+          variant: "destructive",
+        });
+      }
+    } catch (err: any) {
+      toast({
+        title: "فشل الاتصال",
+        description: err?.message ?? "حصل خطأ غير متوقع",
+        variant: "destructive",
+      });
     }
   };
 
@@ -208,42 +663,19 @@ export function ProductsSection() {
           </DialogHeader>
           {editing && (
             <div className="px-6 py-4 space-y-5">
-              {/* Images */}
+              {/* Images — real uploads via /api/admin/upload */}
               <div>
-                <Label className="text-xs mb-2 block">صور المنتج (رابط URL)</Label>
-                <div className="space-y-2">
-                  {editing.images.map((img: any, i: number) => (
-                    <div key={i} className="flex items-center gap-2">
-                      <img src={img.url} alt="" className="h-12 w-10 object-cover bg-secondary" />
-                      <Input
-                        value={img.url}
-                        onChange={(e) => {
-                          const images = [...editing.images];
-                          images[i] = { ...images[i], url: e.target.value, alt: editing.nameAr };
-                          setEditing({ ...editing, images });
-                        }}
-                        className="h-9 flex-1"
-                        dir="ltr"
-                        placeholder="https://..."
-                      />
-                      <button
-                        onClick={() => setEditing({ ...editing, images: editing.images.filter((_: any, idx: number) => idx !== i) })}
-                        className="h-9 w-9 flex items-center justify-center hover:bg-secondary text-destructive"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setEditing({ ...editing, images: [...editing.images, { url: "", alt: editing.nameAr }] })}
-                    className="gap-2"
-                  >
-                    <Plus className="h-3 w-3" />
-                    إضافة صورة
-                  </Button>
-                </div>
+                <Label className="text-xs mb-2 block">صور المنتج</Label>
+                <ImagesEditor
+                  images={editing.images ?? []}
+                  onImagesChange={(updater) =>
+                    setEditing((prev) =>
+                      prev ? { ...prev, images: updater(prev.images ?? []) } : prev
+                    )
+                  }
+                  altBase={editing.nameAr || editing.slug || "صورة منتج"}
+                  onUploadingCountChange={setUploadingCount}
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -326,7 +758,7 @@ export function ProductsSection() {
                 <Button variant="outline" onClick={() => { setShowEditor(false); setEditing(null); }}>
                   إلغاء
                 </Button>
-                <Button onClick={save}>
+                <Button onClick={save} disabled={uploadingCount > 0}>
                   {editing.id ? "حفظ التعديلات" : "إنشاء المنتج"}
                 </Button>
               </div>

@@ -1,70 +1,94 @@
+// src/app/api/admin/products/[id]/route.ts
+// PUT    : updates an existing product — scalar fields + full replace of
+//          images (in the new order, first = primary) and sizes.
+//          Only image URLS are stored; binaries live in public/uploads
+//          (uploaded via /api/admin/upload), never in the database.
+// DELETE : removes the product and explicitly wipes its images/sizes rows
+//          first, so it works with or without onDelete: Cascade.
+
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentAdmin } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 
-// GET /api/admin/products/[id]
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getCurrentAdmin();
-  if (!user) return NextResponse.json({ success: false, error: "غير مصرح" }, { status: 401 });
-  const { id } = await params;
-  const product = await db.product.findUnique({
-    where: { id },
-    include: { images: { orderBy: { position: "asc" } }, sizes: true, category: true },
-  });
-  if (!product) return NextResponse.json({ success: false, error: "غير موجود" }, { status: 404 });
-  return NextResponse.json({ success: true, data: product });
-}
+type Ctx = { params: Promise<{ id: string }> };
 
-// PUT /api/admin/products/[id] — full update
-export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+// PUT /api/admin/products/:id
+export async function PUT(req: NextRequest, ctx: Ctx) {
   const user = await getCurrentAdmin();
-  if (!user) return NextResponse.json({ success: false, error: "غير مصرح" }, { status: 401 });
+  if (!user) {
+    return NextResponse.json({ success: false, error: "غير مصرح" }, { status: 401 });
+  }
+
   try {
-    const { id } = await params;
+    const { id } = await ctx.params;
     const body = await req.json();
-    const { images, sizes, ...rest } = body;
 
-    // Update scalar fields
-    const updated = await db.product.update({
-      where: { id },
-      data: { ...rest },
-    });
+    // The client sends the whole product object (incl. relation objects and
+    // metadata). Strip everything that is not a real column, otherwise
+    // Prisma throws "Unknown argument".
+    const {
+      id: _id,
+      images,
+      sizes,
+      category: _category,
+      createdAt: _createdAt,
+      updatedAt: _updatedAt,
+      ...rest
+    } = body;
 
-    // Replace images if provided
-    if (images) {
-      await db.productImage.deleteMany({ where: { productId: id } });
-      if (images.length > 0) {
-        await db.productImage.createMany({
-          data: images.map((i: any, idx: number) => ({
-            url: i.url,
-            alt: i.alt ?? "",
-            position: idx,
-            productId: id,
-          })),
-        });
-      }
+    if (!rest.slug || !rest.nameAr || rest.price == null) {
+      return NextResponse.json(
+        { success: false, error: "الاسم، الـ slug، والسعر مطلوبة" },
+        { status: 400 }
+      );
     }
 
-    // Update sizes if provided
-    if (sizes) {
-      for (const s of sizes) {
-        const existing = await db.productSize.findFirst({
-          where: { productId: id, size: s.size },
-        });
-        if (existing) {
-          await db.productSize.update({ where: { id: existing.id }, data: { stock: s.stock } });
-        } else {
-          await db.productSize.create({ data: { productId: id, size: s.size, stock: s.stock } });
-        }
-      }
-    }
+    const safeImages = Array.isArray(images)
+      ? images.filter((i: any) => i && typeof i.url === "string" && i.url.trim() !== "")
+      : [];
+    const safeSizes = Array.isArray(sizes) ? sizes : [];
 
-    const refreshed = await db.product.findUnique({
-      where: { id },
-      include: { images: { orderBy: { position: "asc" } }, sizes: true, category: true },
+    const product = await db.$transaction(async (tx) => {
+      // 1) Update scalar fields and wipe the current image/size rows
+      //    (replace strategy: whatever the client did NOT send is deleted).
+      await tx.product.update({
+        where: { id },
+        data: {
+          ...rest,
+          images: { deleteMany: {} },
+          sizes: { deleteMany: {} },
+        },
+      });
+
+      // 2) Recreate images in the new order (position 0 = primary) and sizes
+      return tx.product.update({
+        where: { id },
+        data: {
+          images: {
+            create: safeImages.map((i: any, idx: number) => ({
+              url: i.url,
+              alt: i.alt ?? rest.nameAr ?? "",
+              position: idx,
+            })),
+          },
+          sizes: {
+            create: safeSizes.map((s: any) => ({
+              size: s.size,
+              stock: Number(s.stock) || 0,
+            })),
+          },
+        },
+        include: {
+          images: { orderBy: { position: "asc" } },
+          sizes: true,
+          category: true,
+        },
+      });
     });
-    return NextResponse.json({ success: true, data: refreshed });
+
+    return NextResponse.json({ success: true, data: product });
   } catch (e: any) {
+    console.error("PRODUCT UPDATE ERROR:", e);
     return NextResponse.json(
       { success: false, error: e.message ?? "Update failed" },
       { status: 500 }
@@ -72,15 +96,25 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 }
 
-// DELETE /api/admin/products/[id]
-export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+// DELETE /api/admin/products/:id
+export async function DELETE(_req: NextRequest, ctx: Ctx) {
   const user = await getCurrentAdmin();
-  if (!user) return NextResponse.json({ success: false, error: "غير مصرح" }, { status: 401 });
+  if (!user) {
+    return NextResponse.json({ success: false, error: "غير مصرح" }, { status: 401 });
+  }
+
   try {
-    const { id } = await params;
-    await db.product.delete({ where: { id } });
+    const { id } = await ctx.params;
+    await db.$transaction(async (tx) => {
+      await tx.product.update({
+        where: { id },
+        data: { images: { deleteMany: {} }, sizes: { deleteMany: {} } },
+      });
+      await tx.product.delete({ where: { id } });
+    });
     return NextResponse.json({ success: true });
   } catch (e: any) {
+    console.error("PRODUCT DELETE ERROR:", e);
     return NextResponse.json(
       { success: false, error: e.message ?? "Delete failed" },
       { status: 500 }
