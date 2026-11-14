@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { formatPrice } from "@/lib/format";
+import { MEASUREMENT_FIELDS, parseMeasurementsJson } from "@/lib/measurements";
 import { ShoppingCart, Eye } from "lucide-react";
 
 const STATUS_LABELS: Record<string, string> = {
@@ -172,16 +173,44 @@ export function OrdersSection() {
               {/* Items */}
               <Section title="المنتجات">
                 <div className="space-y-2">
-                  {selected.items.map((it: any) => (
-                    <div key={it.id} className="flex items-center gap-3 py-2 border-b border-border last:border-0">
-                      {it.productImage && <img src={it.productImage} alt="" className="h-12 w-10 object-cover bg-secondary" />}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium line-clamp-1">{it.productName}</p>
-                        <p className="text-[10px] text-muted-foreground">مقاس {it.size} × {it.quantity}</p>
+                  {selected.items.map((it: any) => {
+                    // measurementsJson comes from Prisma as a raw JSON string
+                    const m = parseMeasurementsJson(it.measurementsJson);
+                    return (
+                      <div key={it.id} className="py-2 border-b border-border last:border-0">
+                        <div className="flex items-center gap-3">
+                          {it.productImage && <img src={it.productImage} alt="" className="h-12 w-10 object-cover bg-secondary" />}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium line-clamp-1">{it.productName}</p>
+                            <p className="text-[10px] text-muted-foreground">مقاس {it.size} × {it.quantity}</p>
+                          </div>
+                          <span className="text-xs font-medium">{formatPrice(it.price * it.quantity)}</span>
+                        </div>
+                        {/* Custom measurements — only rendered when actually submitted */}
+                        {m && (
+                          <div className="mt-2 border border-border bg-secondary/40 p-2.5">
+                            <p className="text-[10px] tracking-luxe uppercase text-muted-foreground mb-1.5">
+                              مقاسات مخصصة (بالبوصة)
+                            </p>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1 text-xs">
+                              {MEASUREMENT_FIELDS.filter((f) => typeof m[f.key] === "number").map((f) => (
+                                <div key={f.key} className="flex justify-between gap-2">
+                                  <span className="text-muted-foreground">{f.label}</span>
+                                  <span className="font-medium">{m[f.key]}</span>
+                                </div>
+                              ))}
+                            </div>
+                            {m.note && m.note.trim() && (
+                              <p className="text-xs mt-2 pt-2 border-t border-border leading-relaxed">
+                                <span className="text-muted-foreground">ملاحظة: </span>
+                                {m.note}
+                              </p>
+                            )}
+                          </div>
+                        )}
                       </div>
-                      <span className="text-xs font-medium">{formatPrice(it.price * it.quantity)}</span>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </Section>
 

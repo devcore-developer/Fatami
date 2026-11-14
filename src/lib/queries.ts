@@ -180,6 +180,40 @@ function generateTrackingNumber(): string {
   return `FAT-${part()}-${part()}-${part()}`;
 }
 
+// Whitelist + bound-check client-sent measurements before they are persisted
+// (security: never trust arbitrary JSON from the browser). Invalid values are
+// dropped, not thrown, so one bad field can never block a legitimate order.
+// Numeric keys only, 0 < value <= 300; note capped at 500 chars.
+const MEASUREMENT_NUM_KEYS = [
+  "chest",
+  "shoulder",
+  "hips",
+  "waist",
+  "forearm",
+  "sleeveLength",
+  "height",
+] as const;
+const MEASUREMENT_MAX = 300;
+
+function sanitizeMeasurements(m: any): CustomerMeasurements | undefined {
+  if (!m || typeof m !== "object") return undefined;
+  const out: any = {};
+  let count = 0;
+  for (const key of MEASUREMENT_NUM_KEYS) {
+    const raw = m[key];
+    if (raw === undefined || raw === null || raw === "") continue;
+    const n = Number(raw);
+    if (!Number.isFinite(n) || n <= 0 || n > MEASUREMENT_MAX) continue;
+    out[key] = n;
+    count++;
+  }
+  if (typeof m.note === "string" && m.note.trim()) {
+    out.note = m.note.trim().slice(0, 500);
+    count++;
+  }
+  return count > 0 ? out : undefined;
+}
+
 export async function createOrder(
   input: CreateOrderInput
 ): Promise<{ order: Order; }> {
@@ -233,7 +267,7 @@ export async function createOrder(
         size: line.size,
         quantity: line.quantity,
         price: product.price,
-        measurements: line.measurements,
+        measurements: sanitizeMeasurements(line.measurements),
       });
     }
 

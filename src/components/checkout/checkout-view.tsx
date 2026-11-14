@@ -5,6 +5,7 @@ import { useCart, useUI } from "@/store";
 import { formatPrice } from "@/lib/format";
 import { storeSettings } from "@/data/catalog";
 import { useCatalog } from "@/components/storefront/catalog-provider";
+import { formatMeasurementsSummary } from "@/lib/measurements";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -150,6 +151,8 @@ export function CheckoutView() {
           productId: i.productId,
           size: i.size,
           quantity: i.quantity,
+          // Custom measurements ride with their own cart line (may be undefined)
+          measurements: i.measurements,
         })),
         paymentMethod,
         transferScreenshot: screenshotUrl,
@@ -450,21 +453,29 @@ export function CheckoutView() {
             <div className="border border-hairline rounded-2xl bg-surface p-6">
               <h3 className="text-sm font-bold tracking-luxe uppercase text-charcoal mb-4">ملخص الطلب</h3>
               <div className="space-y-4 mb-5 max-h-72 overflow-y-auto">
-                {items.map((item) => (
-                  <div key={item.id} className="flex gap-3">
-                    <div className="relative shrink-0 w-14 h-18 bg-beige overflow-hidden rounded-lg">
-                      <img src={item.product.images[0]?.url} alt="" className="w-full h-full object-cover" />
-                      <span className="absolute -top-1 -left-1 bg-charcoal text-cream text-[10px] h-5 w-5 rounded-full flex items-center justify-center">
-                        {item.quantity}
-                      </span>
+                {items.map((item) => {
+                  const measSummary = formatMeasurementsSummary(item.measurements);
+                  return (
+                    <div key={item.id} className="flex gap-3">
+                      <div className="relative shrink-0 w-14 h-18 bg-beige overflow-hidden rounded-lg">
+                        <img src={item.product.images[0]?.url} alt="" className="w-full h-full object-cover" />
+                        <span className="absolute -top-1 -left-1 bg-charcoal text-cream text-[10px] h-5 w-5 rounded-full flex items-center justify-center">
+                          {item.quantity}
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium line-clamp-1 text-charcoal">{item.product.nameAr}</p>
+                        <p className="text-xs text-muted-brand mt-0.5">{item.size}</p>
+                        {measSummary && (
+                          <p className="text-[10px] text-brown mt-0.5 leading-relaxed">
+                            مقاسات مخصصة: {measSummary}
+                          </p>
+                        )}
+                        <p className="text-xs font-medium mt-1 text-charcoal">{formatPrice(item.product.price * item.quantity)}</p>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium line-clamp-1 text-charcoal">{item.product.nameAr}</p>
-                      <p className="text-xs text-muted-brand mt-0.5">{item.size}</p>
-                      <p className="text-xs font-medium mt-1 text-charcoal">{formatPrice(item.product.price * item.quantity)}</p>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
               <div className="space-y-2 border-t border-hairline pt-4 text-sm">
                 <div className="flex justify-between">

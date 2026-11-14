@@ -1,15 +1,18 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Product, SizeCode } from "@/types";
+import { Product, SizeCode, CustomerMeasurements } from "@/types";
 import { useCart, useUI } from "@/store";
 import { formatPrice } from "@/lib/format";
 import { getProductBySlug } from "@/data/catalog";
 import { useCatalog } from "@/components/storefront/catalog-provider";
+import { formatMeasurementsSummary } from "@/lib/measurements";
+import { MeasurementsModal } from "@/components/product/measurements-modal";
 import {
   ChevronLeft,
   ShoppingBag,
   Ruler,
+  PenLine,
   Minus,
   Plus,
 } from "lucide-react";
@@ -18,7 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export function ProductDetail() {
   const { activeProductSlug, setView, setSizeChartOpen, openCategory } = useUI();
-  const { addItem } = useCart();
+  const { addItem, items } = useCart();
   const { toast } = useToast();
   const { getProductBySlug: getFromCatalog } = useCatalog();
 
@@ -31,6 +34,10 @@ export function ProductDetail() {
   const [selectedSize, setSelectedSize] = useState<SizeCode | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [expandedSection, setExpandedSection] = useState<string | null>("description");
+  // Custom measurements (optional) — attached to the cart line on add,
+  // then persisted with the order item at checkout.
+  const [measurements, setMeasurements] = useState<CustomerMeasurements | null>(null);
+  const [isMeasurementsOpen, setIsMeasurementsOpen] = useState(false);
 
   if (!product) {
     return (
@@ -53,6 +60,13 @@ export function ProductDetail() {
   const productImages = product.images ?? [];
   const activeImgObj = productImages[activeImg] ?? productImages[0];
 
+  // Pre-fill the measurements modal from the draft, or from the cart line
+  // for the selected size when the customer already added this product.
+  const cartLineMeasurements = selectedSize
+    ? items.find((i) => i.productId === product.id && i.size === selectedSize)?.measurements ?? null
+    : null;
+  const modalInitial = measurements ?? cartLineMeasurements;
+
   const handleAddToCart = () => {
     if (!selectedSize) {
       toast({
@@ -62,7 +76,7 @@ export function ProductDetail() {
       });
       return;
     }
-    addItem(product, selectedSize, quantity);
+    addItem(product, selectedSize, quantity, measurements ?? undefined);
     toast({
       title: "تمت الإضافة بنجاح",
       description: `${product.nameAr} — مقاس ${selectedSize}`,
@@ -81,6 +95,8 @@ export function ProductDetail() {
     handleAddToCart();
     setView("checkout");
   };
+
+  const measurementsSummary = formatMeasurementsSummary(measurements);
 
   return (
     <div className="bg-background">
@@ -167,18 +183,28 @@ export function ProductDetail() {
               </div>
             </div>
 
-            {/* Size selection + prominent Size Chart button */}
+            {/* Size selection + Size Chart + Custom Measurements buttons */}
             <div className="mb-6">
               <div className="flex items-center justify-between mb-3 gap-3">
                 <span className="text-sm font-medium">المقاس</span>
-                <button
-                  onClick={() => setSizeChartOpen(true)}
-                  className="inline-flex items-center gap-2 h-10 px-4 text-xs font-medium border border-foreground text-foreground hover:bg-foreground hover:text-background transition-colors rounded-full"
-                  type="button"
-                >
-                  <Ruler className="h-4 w-4" />
-                  جدول المقاسات
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setIsMeasurementsOpen(true)}
+                    className="inline-flex items-center gap-2 h-10 px-4 text-xs font-medium border border-border text-foreground hover:border-foreground hover:bg-secondary/40 transition-colors rounded-full"
+                    type="button"
+                  >
+                    <PenLine className="h-4 w-4" />
+                    أضف مقاساتك
+                  </button>
+                  <button
+                    onClick={() => setSizeChartOpen(true)}
+                    className="inline-flex items-center gap-2 h-10 px-4 text-xs font-medium border border-foreground text-foreground hover:bg-foreground hover:text-background transition-colors rounded-full"
+                    type="button"
+                  >
+                    <Ruler className="h-4 w-4" />
+                    جدول المقاسات
+                  </button>
+                </div>
               </div>
               <div className="flex flex-wrap gap-2">
                 {(product.sizes ?? []).map((s) => {
@@ -205,6 +231,27 @@ export function ProductDetail() {
                 <p className="text-xs text-foreground mt-2">
                   بقي {selectedSizeObj.stock} قطع فقط — سارعي بالطلب
                 </p>
+              )}
+              {/* Saved measurements summary (optional feature) */}
+              {measurements && measurementsSummary && (
+                <div className="mt-3 border border-border bg-secondary/40 px-3 py-2.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-medium">مقاساتك محفوظة ✓</span>
+                    <button
+                      onClick={() => setIsMeasurementsOpen(true)}
+                      className="text-xs underline underline-offset-2 hover:text-foreground"
+                      type="button"
+                    >
+                      تعديل
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">
+                    {measurementsSummary}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    تُضاف مع القطعة عند الضغط على «أضيفي إلى السلة».
+                  </p>
+                </div>
               )}
             </div>
 
@@ -315,6 +362,14 @@ export function ProductDetail() {
           </div>
         </div>
       </div>
+
+      {/* Custom measurements modal (optional, per customer request) */}
+      <MeasurementsModal
+        open={isMeasurementsOpen}
+        onOpenChange={setIsMeasurementsOpen}
+        initial={modalInitial}
+        onSave={setMeasurements}
+      />
     </div>
   );
 }

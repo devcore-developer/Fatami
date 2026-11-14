@@ -72,8 +72,10 @@ export interface CustomerMeasurements {
   chest?: number;
   waist?: number;
   hips?: number;
+  forearm?: number; // الزند
   sleeveLength?: number;
   height?: number;
+  note?: string; // ملاحظة نصية حرة
 }
 
 export interface KuwaitGovernorate {
