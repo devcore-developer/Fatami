@@ -342,7 +342,6 @@ function ReturnsPage() {
           <ol className="space-y-1.5 text-sm list-decimal pr-4">
             <li>تواصلي معنا عبر الهاتف أو البريد الإلكتروني لطلب الإرجاع.</li>
             <li>سيتم تحديد موعد لاستلام المنتج من عنوانك.</li>
-            <li>بعد فحص المنتج، سيتم رد المبلغ خلال 5-7 أيام عمل.</li>
           </ol>
         </InfoBlock>
       </div>
