@@ -91,7 +91,6 @@ export function StorefrontFooter() {
             <ul className="space-y-3 text-sm">
               <li><FooterLink onClick={() => setView("size-guide")}>دليل المقاسات</FooterLink></li>
               <li><FooterLink onClick={() => setView("shipping-info")}>الشحن والتوصيل</FooterLink></li>
-              <li><FooterLink onClick={() => setView("returns")}>الإرجاع والاستبدال</FooterLink></li>
               <li><FooterLink onClick={() => setView("order-tracking")}>تتبع الطلب</FooterLink></li>
               <li><FooterLink onClick={() => setView("contact")}>تواصل معنا</FooterLink></li>
               <li><FooterLink onClick={() => setView("privacy")}>سياسة الخصوصية</FooterLink></li>

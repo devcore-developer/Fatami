@@ -345,7 +345,7 @@ export function ProductDetail() {
                 </Accordion>
               )}
               <Accordion
-                title="الشحن والإرجاع"
+                title="الشحن والتوصيل"
                 open={expandedSection === "shipping"}
                 onToggle={() =>
                   setExpandedSection(

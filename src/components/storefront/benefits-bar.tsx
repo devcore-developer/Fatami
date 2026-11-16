@@ -6,7 +6,7 @@ export function BenefitsBar() {
   const benefits = [
     { icon: <Gem className="h-5 w-5" />, text: "تصاميم حصرية", sub: "قطع فريدة" },
     { icon: <Shield className="h-5 w-5" />, text: "خامات فاخرة", sub: "جودة عالية" },
-    { icon: <Truck className="h-5 w-5" />, text: "شحن سريع لكل الكويت", sub: "1-3 أيام" },
+    { icon: <Truck className="h-5 w-5" />, text: "شحن سريع لكل الكويت", sub: "7-10 أيام" },
     { icon: <CreditCard className="h-5 w-5" />, text: "دفع آمن ومشفر", sub: "UPayments" },
   ];
   return (

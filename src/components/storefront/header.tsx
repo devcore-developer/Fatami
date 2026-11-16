@@ -108,9 +108,6 @@ export function StorefrontHeader() {
                   <MenuLink onClick={() => { setView("size-guide"); setMenuOpen(false); }}>
                     دليل المقاسات
                   </MenuLink>
-                  <MenuLink onClick={() => { setView("returns"); setMenuOpen(false); }}>
-                    الإرجاع والاستبدال
-                  </MenuLink>
                   <MenuLink onClick={() => { setView("order-tracking"); setMenuOpen(false); }}>
                     تتبع الطلب
                   </MenuLink>

@@ -16,7 +16,6 @@ export function StaticPages() {
   if (view === "contact") return <ContactPage />;
   if (view === "size-guide") return <SizeGuidePage />;
   if (view === "shipping-info") return <ShippingInfoPage />;
-  if (view === "returns") return <ReturnsPage />;
   if (view === "privacy") return <PrivacyPage />;
   if (view === "terms") return <TermsPage />;
   if (view === "order-success") return <OrderSuccessPage orderNumber={lastOrderNumber} />;
@@ -318,31 +317,6 @@ function ShippingInfoPage() {
         </InfoBlock>
         <InfoBlock title="الدفع عند الاستلام">
           <p>يتوفر الدفع نقداً عند استلام الطلب في جميع المحافظات دون رسوم إضافية.</p>
-        </InfoBlock>
-      </div>
-    </PageShell>
-  );
-}
-
-function ReturnsPage() {
-  return (
-    <PageShell title="الإرجاع والاستبدال" eyebrow="رضاك أولويتنا">
-      <div className="max-w-2xl mx-auto space-y-6">
-        <InfoBlock title="سياسة الإرجاع">
-          <p>يمكنك إرجاع أو استبدال المنتجات خلال 7 أيام من تاريخ الاستلام، بشرط أن تكون المنتجات بحالتها الأصلية وغير مستخدمة، مع الاحتفاظ بالبطاقات والشارات الأصلية.</p>
-        </InfoBlock>
-        <InfoBlock title="المنتجات غير القابلة للإرجاع">
-          <ul className="space-y-1.5 text-sm">
-            <li>• المنتجات المفصّلة حسب قياساتك المخصصة.</li>
-            <li>• المنتجات المستخدمة أو التالفة.</li>
-            <li>• المنتجات التي تم تعديلها.</li>
-          </ul>
-        </InfoBlock>
-        <InfoBlock title="كيفية الإرجاع">
-          <ol className="space-y-1.5 text-sm list-decimal pr-4">
-            <li>تواصلي معنا عبر الهاتف أو البريد الإلكتروني لطلب الإرجاع.</li>
-            <li>سيتم تحديد موعد لاستلام المنتج من عنوانك.</li>
-          </ol>
         </InfoBlock>
       </div>
     </PageShell>

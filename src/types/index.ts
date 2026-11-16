@@ -198,7 +198,6 @@ export type StoreView =
   | "policies"
   | "size-guide"
   | "shipping-info"
-  | "returns"
   | "privacy"
   | "terms"
   | "order-success"

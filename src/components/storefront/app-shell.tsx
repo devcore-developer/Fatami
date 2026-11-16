@@ -29,7 +29,6 @@ export function AppShell({ initialStorefront }: { initialStorefront?: Storefront
             view === "contact" ||
             view === "size-guide" ||
             view === "shipping-info" ||
-            view === "returns" ||
             view === "privacy" ||
             view === "terms" ||
             view === "order-success" ||
