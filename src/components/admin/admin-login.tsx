@@ -81,10 +81,6 @@ export function AdminLogin({ onSuccess }: { onSuccess: (user: { name: string; em
         <Button type="submit" disabled={loading} className="w-full h-11">
           {loading ? "جاري الدخول..." : "تسجيل الدخول"}
         </Button>
-        <div className="text-xs text-center text-muted-foreground border-t border-border pt-4">
-          <p>بيانات الدخول التجريبية:</p>
-          <p className="font-mono mt-1" dir="ltr">admin@Futamidesigns.com / admin123</p>
-        </div>
       </form>
     </div>
   );

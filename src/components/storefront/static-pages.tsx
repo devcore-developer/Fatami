@@ -413,7 +413,9 @@ function OrderTrackingPage() {
     setResult(null);
     try {
       const params = new URLSearchParams({ orderNumber, phone });
-      const res = await fetch(`/api/orders?${params}`);
+      // no-store: الحالة المعروضة يجب أن تُجلب من قاعدة البيانات لحظة الفحص،
+      // حتى يظهر أي تحديث من الأدمن (تأكيد/شحن/توصيل/إلغاء) فوراً عند التتبع.
+      const res = await fetch(`/api/orders?${params}`, { cache: "no-store" });
       const json = await res.json();
       if (json.success) {
         setResult(json.data);
@@ -427,13 +429,14 @@ function OrderTrackingPage() {
     }
   };
 
+  // تسميات الحالات مطابقة لقيم الداتابيز الفعلية — بدون أي قيم افتراضية.
   const statusLabels: Record<string, string> = {
     PENDING: "قيد المراجعة",
     CONFIRMED: "مؤكد — قيد التجهيز",
     PROCESSING: "قيد التجهيز",
     SHIPPED: "تم الشحن",
     DELIVERED: "تم التوصيل",
-    CANCELLED: "ملغي",
+    CANCELLED: "تم إلغاء الطلب",
     REFUNDED: "تم الاسترداد",
   };
   const paymentLabels: Record<string, string> = {
@@ -484,6 +487,22 @@ function OrderTrackingPage() {
             <span className="text-muted-foreground">رقم الطلب</span>
             <span className="font-mono font-bold" dir="ltr">{result.orderNumber}</span>
           </div>
+
+          {/* مؤشر تقدم الطلب — مشتق بالكامل من الحالة المخزّنة في قاعدة
+              البيانات. الطلبات الملغاة/المستردة تُعرض بحالة منفصلة واضحة
+              ولا تظهر أبداً كمكتملة. */}
+          {result.status === "CANCELLED" ? (
+            <div className="p-3 border border-destructive/30 text-destructive text-center">
+              تم إلغاء الطلب
+            </div>
+          ) : result.status === "REFUNDED" ? (
+            <div className="p-3 border border-border text-muted-foreground text-center">
+              تم استرداد المبلغ
+            </div>
+          ) : (
+            <TrackingProgress status={result.status} />
+          )}
+
           <div className="flex justify-between">
             <span className="text-muted-foreground">الحالة</span>
             <span className="font-medium">{statusLabels[result.status] || result.status}</span>
@@ -577,6 +596,64 @@ function InfoBlock({
       <div className="text-sm text-muted-foreground leading-relaxed space-y-2">
         {children}
       </div>
+    </div>
+  );
+}
+
+// ── مؤشر تقدم التتبع ──
+// المراحل مشتقة من الحالة الفعلية المخزّنة في قاعدة البيانات (result.status)
+// فقط. لا تُعرض أي مرحلة كمكتملة لم تحدث فعلاً:
+// PENDING → المراجعة فقط | CONFIRMED/PROCESSING → التجهيز
+// SHIPPED → الشحن | DELIVERED → كل المراحل مكتملة.
+const TRACKING_STAGES = [
+  "قيد المراجعة",
+  "مؤكد — قيد التجهيز",
+  "تم الشحن",
+  "تم التوصيل",
+] as const;
+
+function trackingStageIndex(status: string): number {
+  if (status === "PENDING") return 0;
+  if (status === "CONFIRMED" || status === "PROCESSING") return 1;
+  if (status === "SHIPPED") return 2;
+  if (status === "DELIVERED") return 3;
+  return -1; // الحالات خارج المسار (ملغي/مسترد) تُعرض بشكل منفصل أعلاه
+}
+
+function TrackingProgress({ status }: { status: string }) {
+  const current = trackingStageIndex(status);
+  return (
+    <div className="flex items-start w-full py-1" dir="rtl">
+      {TRACKING_STAGES.map((label, i) => {
+        const done = i < current;
+        const active = i === current;
+        return (
+          <div
+            key={label}
+            className={`flex items-start ${i < TRACKING_STAGES.length - 1 ? "flex-1" : ""}`}
+          >
+            <div className="flex flex-col items-center gap-1.5">
+              <span
+                className={`h-3.5 w-3.5 rounded-full border mt-0.5 ${
+                  done || active
+                    ? "bg-foreground border-foreground"
+                    : "bg-background border-border"
+                }`}
+              />
+              <span
+                className={`text-[10px] leading-tight text-center whitespace-nowrap ${
+                  done || active ? "text-foreground font-medium" : "text-muted-foreground"
+                }`}
+              >
+                {label}
+              </span>
+            </div>
+            {i < TRACKING_STAGES.length - 1 && (
+              <div className={`flex-1 h-px mt-2 mx-1 ${done ? "bg-foreground" : "bg-border"}`} />
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
