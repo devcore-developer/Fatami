@@ -195,7 +195,6 @@ export type StoreView =
   | "checkout"
   | "about"
   | "contact"
-  | "policies"
   | "size-guide"
   | "shipping-info"
   | "privacy"

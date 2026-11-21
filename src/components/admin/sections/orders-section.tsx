@@ -217,6 +217,22 @@ export function OrdersSection() {
               {/* Totals */}
               <Section title="الملخص المالي">
                 <Row label="المجموع الفرعي" value={formatPrice(selected.subtotal)} />
+                {selected.promoCode && (
+                  <Row
+                    label={`كود الخصم${selected.discountPercent ? ` (${selected.discountPercent}%)` : ""}`}
+                    value={selected.promoCode}
+                    ltr
+                  />
+                )}
+                {(selected.discount ?? 0) > 0 && (
+                  <>
+                    <Row label="الخصم" value={`−${formatPrice(selected.discount)}`} />
+                    <Row
+                      label="المجموع بعد الخصم"
+                      value={formatPrice(selected.subtotal - selected.discount)}
+                    />
+                  </>
+                )}
                 <Row label="الشحن" value={formatPrice(selected.shippingCost)} />
                 <div className="flex justify-between pt-2 border-t border-border font-bold">
                   <span>الإجمالي</span>

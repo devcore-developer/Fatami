@@ -165,6 +165,9 @@ export interface CreateOrderInput {
   paymentMethod: "BANK_TRANSFER" | "WAMD";
   transferScreenshot?: string | null;
   notes?: string;
+  // Optional promo/coupon code. Validated & priced SERVER-SIDE only — the
+  // client never sends (and the server never trusts) a discount amount.
+  promoCode?: string;
 }
 
 // Generate next order number sequence
@@ -280,6 +283,29 @@ export async function createOrder(
     if (!gov.active) throw new Error(`منطقة التوصيل غير متاحة: ${input.customer.governorate}`);
     const shippingCost = gov.shippingCost;
 
+    // 2.5) Promo code (optional) — revalidated SERVER-SIDE inside this
+    // transaction; the client's discount amount is never trusted. An invalid
+    // code aborts the whole order with a customer-friendly message instead of
+    // silently creating a full-price order, keeping the displayed total
+    // consistent with the stored one.
+    let discountAmount = 0;
+    let discountPercent: number | undefined;
+    let appliedPromoCode: string | undefined;
+    if (input.promoCode && input.promoCode.trim()) {
+      const code = input.promoCode.trim().toUpperCase();
+      const promo = await validateDiscountCode(code, tx);
+      if (!promo.valid || promo.type === undefined || promo.value === undefined) {
+        throw new Error(promo.error || "كود الخصم غير صالح");
+      }
+      discountAmount = computeDiscountAmount(
+        promo.type as "PERCENTAGE" | "FIXED",
+        promo.value,
+        subtotal
+      );
+      appliedPromoCode = code;
+      if (promo.type === "PERCENTAGE") discountPercent = promo.value;
+    }
+
     // 3) Create customer
     const customer = await tx.customer.create({
       data: {
@@ -305,8 +331,13 @@ export async function createOrder(
         customerId: customer.id,
         subtotal,
         shippingCost,
-        discount: 0,
-        total: subtotal + shippingCost,
+        discount: discountAmount,
+        total: subtotal - discountAmount + shippingCost,
+        // New nullable columns (migration in CHANGES.md) — Prisma omits
+        // undefined values, so non-promo orders keep working even before the
+        // migration runs.
+        promoCode: appliedPromoCode,
+        discountPercent,
         status: "PENDING",
         paymentStatus: "UNPAID",
         paymentMethod: input.paymentMethod,
@@ -332,6 +363,15 @@ export async function createOrder(
           price: oi.price,
           measurementsJson: oi.measurements ? JSON.stringify(oi.measurements) : null,
         },
+      });
+    }
+
+    // 6) Consume the promo code usage — inside the same transaction as the
+    // order creation, so usage counting stays consistent with placed orders.
+    if (appliedPromoCode) {
+      await tx.discountCode.update({
+        where: { code: appliedPromoCode },
+        data: { usedCount: { increment: 1 } },
       });
     }
 
@@ -412,17 +452,34 @@ export async function updateOrderStatus(orderId: string, status: string) {
 }
 
 // ---------- Discount codes ----------
+// `client` defaults to the global prisma instance; pass a transaction client
+// (tx) to run the same rules inside a transaction (used by createOrder).
 export async function validateDiscountCode(
-  code: string
+  code: string,
+  client: any = db
 ): Promise<{ valid: boolean; type?: string; value?: number; error?: string }> {
-  const rec = await db.discountCode.findUnique({ where: { code: code.toUpperCase() } });
+  const rec = await client.discountCode.findUnique({ where: { code: code.toUpperCase() } });
   if (!rec) return { valid: false, error: "كود الخصم غير صحيح" };
-  if (!rec.active) return { valid: false, error: "انتهت صلاحية استخدام هذا الكود" };
+  if (!rec.active) return { valid: false, error: "كود الخصم غير نشط" };
   if (rec.usageLimit && rec.usedCount >= rec.usageLimit)
     return { valid: false, error: "انتهت صلاحية استخدام هذا الكود" };
   if (rec.expiresAt && rec.expiresAt < new Date())
     return { valid: false, error: "انتهت صلاحية الكود" };
   return { valid: true, type: rec.type, value: rec.value };
+}
+
+// Pure discount calculation shared by the validation endpoint and
+// createOrder, so display and stored amounts always agree. KWD uses 3
+// decimals; the result is clamped to [0, subtotal] so a FIXED code larger
+// than the cart can never produce a negative total.
+export function computeDiscountAmount(
+  type: "PERCENTAGE" | "FIXED",
+  value: number,
+  subtotal: number
+): number {
+  const raw = type === "PERCENTAGE" ? (subtotal * value) / 100 : value;
+  const amount = Math.min(Math.max(raw, 0), subtotal);
+  return Math.round(amount * 1000) / 1000;
 }
 
 // ---------- mappers ----------

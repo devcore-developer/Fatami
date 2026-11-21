@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Check, Upload, Building2, Copy, Smartphone } from "lucide-react";
+import { ArrowLeft, Check, Upload, Building2, Copy, Smartphone, Tag, X } from "lucide-react";
 
 type Step = "info" | "payment";
 type PaymentMethod = "WAMD" | "BANK_TRANSFER";
@@ -60,11 +60,89 @@ export function CheckoutView() {
       .catch(() => {});
   }, []);
 
+  // ── Promo code (optional) ─────────────────────────────────────────────────
+  // Only the CODE lives in client state; every amount comes from the server
+  // (/api/promo/validate reads prices from the DB). The code is revalidated
+  // whenever the cart changes and again inside createOrder at submit time,
+  // so the displayed discount can never drift from the stored order.
+  const [promoInput, setPromoInput] = useState("");
+  const [appliedPromo, setAppliedPromo] = useState<{
+    code: string;
+    type: "PERCENTAGE" | "FIXED";
+    value: number;
+    discountAmount: number;
+  } | null>(null);
+  const [promoError, setPromoError] = useState("");
+  const [promoChecking, setPromoChecking] = useState(false);
+
+  const applyPromo = async (raw?: string) => {
+    const code = (raw ?? promoInput).trim().toUpperCase();
+    if (!code) {
+      setPromoError("أدخلي كود الخصم");
+      return;
+    }
+    if (items.length === 0) return;
+    setPromoChecking(true);
+    setPromoError("");
+    try {
+      const res = await fetch("/api/promo/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code,
+          items: items.map((i) => ({ productId: i.productId, quantity: i.quantity })),
+        }),
+      });
+      const json = await res.json();
+      if (json.success && json.data) {
+        setAppliedPromo({
+          code: json.data.code,
+          type: json.data.type,
+          value: json.data.value,
+          discountAmount: json.data.discountAmount,
+        });
+        setPromoInput("");
+        localStorage.setItem("futami_promo_code", json.data.code);
+      } else {
+        setAppliedPromo(null);
+        localStorage.removeItem("futami_promo_code");
+        setPromoError(json.error || "كود الخصم غير صالح");
+      }
+    } catch {
+      setPromoError("تعذّر التحقق من الكود، حاولي مرة أخرى");
+    } finally {
+      setPromoChecking(false);
+    }
+  };
+
+  const removePromo = () => {
+    setAppliedPromo(null);
+    setPromoError("");
+    localStorage.removeItem("futami_promo_code");
+  };
+
+  // Restore an applied code after a checkout refresh, then revalidate
+  // server-side whenever the cart subtotal changes (quantity edits, item
+  // removal) so the discount stays consistent with the actual order.
+  useEffect(() => {
+    const saved = localStorage.getItem("futami_promo_code");
+    if (saved) void applyPromo(saved);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    if (appliedPromo) void applyPromo(appliedPromo.code);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [total]);
+
   const selectedGov = governorates.find(
     (g) => g.nameAr === form.governorate
   );
   const shippingCost = selectedGov?.shippingCost ?? 0;
-  const grandTotal = total + shippingCost;
+  // Derived amounts — the discount always comes from the last server
+  // validation, never from client-side math.
+  const discountAmount = appliedPromo?.discountAmount ?? 0;
+  const finalSubtotal = Math.max(0, Math.round((total - discountAmount) * 1000) / 1000);
+  const grandTotal = finalSubtotal + shippingCost;
 
   if (items.length === 0 && !processing) {
     return (
@@ -156,6 +234,8 @@ export function CheckoutView() {
         })),
         paymentMethod,
         transferScreenshot: screenshotUrl,
+        // Server revalidates & recalculates the discount inside createOrder.
+        promoCode: appliedPromo?.code,
       };
 
       const res = await fetch("/api/orders", {
@@ -477,11 +557,95 @@ export function CheckoutView() {
                   );
                 })}
               </div>
+              {/* Promo code */}
+              <div className="border-t border-hairline pt-4">
+                {appliedPromo ? (
+                  <div className="flex items-center justify-between gap-2 bg-beige/60 border border-hairline rounded-xl px-3 py-2.5">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Tag className="h-4 w-4 text-brown shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-charcoal truncate" dir="ltr">
+                          {appliedPromo.code}
+                        </p>
+                        <p className="text-[10px] text-brown">
+                          {appliedPromo.type === "PERCENTAGE"
+                            ? `خصم ${appliedPromo.value}%`
+                            : `خصم ثابت ${formatPrice(appliedPromo.value)}`}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        onClick={() => {
+                          setPromoInput(appliedPromo.code);
+                          removePromo();
+                        }}
+                        className="text-[11px] text-muted-brand hover:text-brown transition-colors"
+                      >
+                        تغيير
+                      </button>
+                      <button
+                        onClick={removePromo}
+                        className="h-7 w-7 inline-flex items-center justify-center rounded-full hover:bg-beige transition-colors"
+                        aria-label="إزالة كود الخصم"
+                      >
+                        <X className="h-3.5 w-3.5 text-muted-brand" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="flex gap-2">
+                      <input
+                        value={promoInput}
+                        onChange={(e) => setPromoInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            void applyPromo();
+                          }
+                        }}
+                        placeholder="كود الخصم"
+                        dir="ltr"
+                        className="flex-1 h-10 bg-surface border border-hairline rounded-lg px-3 text-sm outline-none focus:ring-1 focus:ring-brown"
+                      />
+                      <button
+                        onClick={() => void applyPromo()}
+                        disabled={promoChecking || !promoInput.trim()}
+                        className="h-10 px-5 bg-charcoal text-cream text-xs tracking-luxe uppercase font-medium rounded-lg hover:bg-dark-brown transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        {promoChecking ? "جاري..." : "تطبيق"}
+                      </button>
+                    </div>
+                    {promoError && (
+                      <p className="text-xs text-destructive mt-1.5">{promoError}</p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Totals */}
               <div className="space-y-2 border-t border-hairline pt-4 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-brand">المجموع الفرعي</span>
-                  <span className="text-charcoal">{formatPrice(total)}</span>
+                  <span className={appliedPromo ? "text-muted-brand line-through" : "text-charcoal"}>
+                    {formatPrice(total)}
+                  </span>
                 </div>
+                {appliedPromo && (
+                  <>
+                    <div className="flex justify-between text-brown">
+                      <span>
+                        الخصم ({appliedPromo.type === "PERCENTAGE" ? `${appliedPromo.value}%` : "مبلغ ثابت"})
+                      </span>
+                      <span className="font-medium">−{formatPrice(appliedPromo.discountAmount)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-brand">المجموع بعد الخصم</span>
+                      <span className="text-charcoal font-medium">{formatPrice(finalSubtotal)}</span>
+                    </div>
+                  </>
+                )}
                 <div className="flex justify-between">
                   <span className="text-muted-brand">الشحن</span>
                   <span className="text-charcoal">{shippingCost > 0 ? formatPrice(shippingCost) : "—"}</span>
