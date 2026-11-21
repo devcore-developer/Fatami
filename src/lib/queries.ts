@@ -396,9 +396,18 @@ export async function listOrders(limit = 50) {
 }
 
 export async function updateOrderStatus(orderId: string, status: string) {
+  // Admin confirming an order means its payment is settled (bank transfer /
+  // WAMD verified in the dashboard) — sync paymentStatus to PAID in the SAME
+  // write so the customer never sees "Unpaid" on a confirmed order. A single
+  // Prisma update is one atomic SQL statement; other statuses never touch
+  // paymentStatus, and the admin can still override it manually afterwards.
   return db.order.update({
     where: { id: orderId },
-    data: { status, updatedAt: new Date() },
+    data: {
+      status,
+      ...(status === "CONFIRMED" ? { paymentStatus: "PAID" } : {}),
+      updatedAt: new Date(),
+    },
   });
 }
 
@@ -408,7 +417,7 @@ export async function validateDiscountCode(
 ): Promise<{ valid: boolean; type?: string; value?: number; error?: string }> {
   const rec = await db.discountCode.findUnique({ where: { code: code.toUpperCase() } });
   if (!rec) return { valid: false, error: "كود الخصم غير صحيح" };
-  if (!rec.active) return { valid: false, error: "كود الخصم غير نشط" };
+  if (!rec.active) return { valid: false, error: "انتهت صلاحية استخدام هذا الكود" };
   if (rec.usageLimit && rec.usedCount >= rec.usageLimit)
     return { valid: false, error: "انتهت صلاحية استخدام هذا الكود" };
   if (rec.expiresAt && rec.expiresAt < new Date())
