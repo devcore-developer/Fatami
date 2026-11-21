@@ -535,18 +535,6 @@ function OrderTrackingPage() {
           )}
         </div>
       )}
-
-      <div className="mt-12 max-w-md mx-auto">
-        <div className="border border-border p-5 text-sm">
-          <p className="font-medium mb-2">حالات الطلب:</p>
-          <ul className="space-y-1.5 text-muted-foreground">
-            <li>• قيد المراجعة</li>
-            <li>• مؤكد — قيد التجهيز</li>
-            <li>• تم الشحن</li>
-            <li>• تم التوصيل</li>
-          </ul>
-        </div>
-      </div>
     </PageShell>
   );
 }
