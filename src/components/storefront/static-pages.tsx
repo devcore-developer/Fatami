@@ -403,24 +403,44 @@ function OrderTrackingPage() {
   const [orderNumber, setOrderNumber] = useState("");
   const [phone, setPhone] = useState("");
   const [result, setResult] = useState<any>(null);
+  const [ordersList, setOrdersList] = useState<any[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const track = async (e: React.FormEvent) => {
     e.preventDefault();
+    const on = orderNumber.trim();
+    const ph = phone.trim();
+
+    // الحقلان اختياريان فرديًا — لكن واحد منهما على الأقل مطلوب للبحث.
+    if (!on && !ph) {
+      setError("أدخلي رقم الطلب أو رقم الهاتف — واحد منهما مطلوب للبحث");
+      setResult(null);
+      setOrdersList(null);
+      return;
+    }
+
     setLoading(true);
     setError("");
     setResult(null);
+    setOrdersList(null);
     try {
-      const params = new URLSearchParams({ orderNumber, phone });
+      const params = new URLSearchParams();
+      if (on) params.set("orderNumber", on);
+      if (ph) params.set("phone", ph);
       // no-store: الحالة المعروضة يجب أن تُجلب من قاعدة البيانات لحظة الفحص،
       // حتى يظهر أي تحديث من الأدمن (تأكيد/شحن/توصيل/إلغاء) فوراً عند التتبع.
       const res = await fetch(`/api/orders?${params}`, { cache: "no-store" });
       const json = await res.json();
       if (json.success) {
-        setResult(json.data);
+        if (json.data.mode === "list") {
+          // أكثر من طلب لنفس الهاتف → قائمة للاختيار
+          setOrdersList(json.data.orders);
+        } else {
+          setResult(json.data.order);
+        }
       } else {
-        setError(json.error || "الطلب غير موجود");
+        setError(json.error || "الطلب غير موجود — تأكدي من البيانات المدخلة");
       }
     } catch (err: any) {
       setError(err.message || "تعذّر جلب الطلب");
@@ -452,7 +472,6 @@ function OrderTrackingPage() {
     <PageShell title="تتبع الطلب" eyebrow="تابع طلبك">
       <form onSubmit={track} className="max-w-md mx-auto space-y-4">
         <input
-          required
           value={orderNumber}
           onChange={(e) => setOrderNumber(e.target.value)}
           placeholder="رقم الطلب (مثال: FD-2026-000001)"
@@ -460,10 +479,9 @@ function OrderTrackingPage() {
           dir="ltr"
         />
         <input
-          required
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
-          placeholder="رقم الهاتف"
+          placeholder="رقم الهاتف المستخدم في الطلب"
           className="w-full h-12 px-4 bg-secondary border-0 focus:ring-1 focus:ring-ring outline-none text-center"
           dir="ltr"
         />
@@ -473,6 +491,9 @@ function OrderTrackingPage() {
         >
           {loading ? "جاري البحث..." : "تتبع"}
         </button>
+        <p className="text-xs text-muted-foreground text-center">
+          يمكنك البحث برقم الطلب أو رقم الهاتف أو بالاثنين معًا — واحد منهما كافٍ
+        </p>
       </form>
 
       {error && (
@@ -481,8 +502,53 @@ function OrderTrackingPage() {
         </div>
       )}
 
+      {/* قائمة الطلبات المرتبطة برقم الهاتف — معلومات تتبع فقط بدون بيانات شخصية */}
+      {!result && ordersList && ordersList.length > 0 && (
+        <div className="mt-8 max-w-md mx-auto space-y-4">
+          <p className="text-sm text-muted-foreground text-center">
+            وجدنا {ordersList.length} {ordersList.length === 1 ? "طلبًا" : "من الطلبات"} مرتبطًا برقم الهاتف — اختاري طلبًا لعرض تفاصيل التتبع
+          </p>
+          {ordersList.map((o) => (
+            <button
+              key={o.orderNumber}
+              onClick={() => setResult(o)}
+              className="w-full border border-border p-4 space-y-2 text-right hover:border-foreground transition-colors"
+            >
+              <div className="flex justify-between items-center">
+                <span className="font-mono font-bold" dir="ltr">{o.orderNumber}</span>
+                <span className="text-xs text-muted-foreground">{formatOrderDate(o.createdAt)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">الحالة</span>
+                <span className="font-medium">{statusLabels[o.status] || o.status}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">الدفع</span>
+                <span className="font-medium">{paymentLabels[o.paymentStatus] || o.paymentStatus}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">الإجمالي</span>
+                <span className="font-bold">{formatPrice(o.total)}</span>
+              </div>
+              <div className="pt-2 border-t border-border text-xs tracking-luxe uppercase text-muted-foreground text-center">
+                عرض تفاصيل التتبع
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+
       {result && (
         <div className="mt-8 max-w-md mx-auto border border-border p-6 space-y-3 text-sm">
+          {ordersList && ordersList.length > 0 && (
+            <button
+              onClick={() => setResult(null)}
+              className="text-xs text-muted-foreground underline hover:text-foreground"
+            >
+              رجوع لقائمة الطلبات
+            </button>
+          )}
+
           <div className="flex justify-between">
             <span className="text-muted-foreground">رقم الطلب</span>
             <span className="font-mono font-bold" dir="ltr">{result.orderNumber}</span>
@@ -535,6 +601,18 @@ function OrderTrackingPage() {
           )}
         </div>
       )}
+
+      <div className="mt-12 max-w-md mx-auto">
+        <div className="border border-border p-5 text-sm">
+          <p className="font-medium mb-2">حالات الطلب:</p>
+          <ul className="space-y-1.5 text-muted-foreground">
+            <li>• قيد المراجعة</li>
+            <li>• مؤكد — قيد التجهيز</li>
+            <li>• تم الشحن</li>
+            <li>• تم التوصيل</li>
+          </ul>
+        </div>
+      </div>
     </PageShell>
   );
 }
@@ -586,6 +664,24 @@ function InfoBlock({
       </div>
     </div>
   );
+}
+
+// ── أدوات التتبع ──
+
+// تنسيق تاريخ الطلب في قائمة البحث (بأرقام لاتينية مع أسماء أشهر عربية)
+function formatOrderDate(d: string): string {
+  if (!d) return "";
+  const date = new Date(d);
+  if (isNaN(date.getTime())) return d;
+  try {
+    return date.toLocaleDateString("ar-KW-u-nu-latn", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  } catch {
+    return d;
+  }
 }
 
 // ── مؤشر تقدم التتبع ──
